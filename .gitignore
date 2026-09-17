@@ -8,3 +8,8 @@ Thumbs.db
 
 # Local overrides (keep config.js tracked with placeholders)
 config.local.js
+
+# Node / Wrangler
+node_modules/
+.wrangler/
+dist/

@@ -1,0 +1,12 @@
+{
+  "name": "cl-network-disk-web",
+  "private": true,
+  "description": "网兜官网（Cloudflare Pages 静态站）",
+  "scripts": {
+    "dev": "wrangler pages dev .",
+    "deploy": "wrangler pages deploy . --project-name=cl-network-disk-web"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

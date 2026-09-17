@@ -25,6 +25,18 @@ window.WANGDOU_SITE = {
 };
 ```
 
+## 部署到 Cloudflare Pages
+
+本目录已配置 `wrangler.toml`，账号需已 `wrangler login`。
+
+```bash
+npm install
+npm run deploy
+# 等价：npx wrangler pages deploy . --project-name=cl-network-disk-web
+```
+
+线上地址：https://cl-network-disk-web.pages.dev/
+
 ## 部署到 GitHub Pages
 
 1. 将本目录推送到 GitHub 仓库（可为独立仓库，或 monorepo 子目录）。

@@ -1,5 +1,6 @@
 /**
  * 官网链接配置
+ * Cloudflare Pages：https://cl-network-disk-web.pages.dev/
  * GitHub Pages：https://xiaochenbian-new.github.io/cl-network-disk-web/
  */
 window.WANGDOU_SITE = {
@@ -9,5 +10,7 @@ window.WANGDOU_SITE = {
   githubUrl: "https://github.com/xiaochenbian-new/cl-network-disk-web",
   giteeUrl: "https://gitee.com/xiaochenbian/cl-network-disk-web",
   /** Releases 列表 */
-  githubReleasesUrl: "https://github.com/xiaochenbian-new/cl-network-disk-web/releases"
+  githubReleasesUrl: "https://github.com/xiaochenbian-new/cl-network-disk-web/releases",
+  /** Cloudflare Pages 官网 */
+  cloudflareUrl: "https://cl-network-disk-web.pages.dev/"
 };
