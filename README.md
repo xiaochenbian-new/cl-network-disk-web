@@ -1,0 +1,55 @@
+# 网兜官网（cl-network-disk-web）
+
+静态介绍站，适合部署到 **GitHub Pages** 或 **Gitee Pages**。
+
+## 本地预览
+
+用任意静态服务器打开本目录即可，例如：
+
+```bash
+npx --yes serve .
+```
+
+或直接用浏览器打开 `index.html`。
+
+## 配置下载 / 仓库链接
+
+编辑 [`config.js`](./config.js)：
+
+```js
+window.WANGDOU_SITE = {
+  releaseUrl: "https://github.com/<user>/<repo>/releases/latest",
+  githubUrl: "https://github.com/<user>/<repo>",
+  giteeUrl: "https://gitee.com/<user>/<repo>",
+  githubReleasesUrl: "https://github.com/<user>/<repo>/releases"
+};
+```
+
+## 部署到 GitHub Pages
+
+1. 将本目录推送到 GitHub 仓库（可为独立仓库，或 monorepo 子目录）。
+2. 仓库 **Settings → Pages**：
+   - Source 选 `Deploy from a branch`
+   - Branch 选 `main`（或 `gh-pages`），文件夹选 `/`（根目录）
+3. 若仓库名不是 `username.github.io`，访问地址一般为：
+   `https://<user>.github.io/<repo>/`
+4. 已包含 `.nojekyll`，避免 Jekyll 忽略部分静态资源。
+
+### 作为 monorepo 子目录发布
+
+可用 GitHub Action 只发布 `cl-network-disk-web/` 内容到 `gh-pages` 分支，或把本目录单独拆成仓库。
+
+## 部署到 Gitee Pages
+
+1. 推送到 Gitee 仓库
+2. 服务 → Gitee Pages → 选择分支与目录 → 启动
+
+## 页面结构
+
+| 文件 | 说明 |
+|------|------|
+| `index.html` | 首页（品牌 / 功能 / 网盘 / VIP / 下载） |
+| `styles.css` | 样式 |
+| `config.js` | 外链配置 |
+| `main.js` | 应用配置与页脚年份 |
+| `assets/app-icon.png` | 应用图标 |

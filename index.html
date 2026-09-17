@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="网兜 — 多网盘统一管理客户端。浏览、上传下载、跨盘同步与分享，并把网盘映射成 Windows 虚拟盘。"
+    />
+    <meta name="theme-color" content="#0b3d3a" />
+    <title>网兜 — 多网盘统一管理</title>
+    <link rel="icon" href="assets/app-icon.png" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Syne:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-bg" aria-hidden="true">
+      <span class="blob blob-a"></span>
+      <span class="blob blob-b"></span>
+      <span class="grid-mesh"></span>
+    </div>
+
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="网兜首页">
+        <img src="assets/app-icon.png" alt="" width="36" height="36" />
+        <span>网兜</span>
+      </a>
+      <nav class="nav" aria-label="主导航">
+        <a href="#features">功能</a>
+        <a href="#providers">网盘</a>
+        <a href="#vip">VIP</a>
+        <a href="#download" class="nav-cta">下载</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="brand-hero">网兜</p>
+          <h1>把多家网盘，收进同一个窗口</h1>
+          <p class="hero-lead">
+            浏览 · 上传下载 · 跨盘同步与分享，还能映射成 Windows「此电脑」里的虚拟盘。
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" id="btn-download" href="#download">下载 Windows 版</a>
+            <a class="btn btn-ghost" href="#features">了解功能</a>
+          </div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="desk">
+            <div class="desk-titlebar">
+              <span></span><span></span><span></span>
+              <strong>网兜</strong>
+            </div>
+            <div class="desk-body">
+              <aside class="desk-side">
+                <i class="chip">123</i>
+                <i class="chip">阿里</i>
+                <i class="chip">百度</i>
+                <i class="chip on">夸克</i>
+                <i class="chip">115</i>
+              </aside>
+              <div class="desk-files">
+                <div class="row folder">工作资料</div>
+                <div class="row">设计稿-v3.zip</div>
+                <div class="row">会议录音.mp3</div>
+                <div class="row folder">备份</div>
+                <div class="row pulse">同步中 · 夸克 → 阿里</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="section">
+        <header class="section-head">
+          <h2>一个窗口，管完常用网盘</h2>
+          <p>不必在浏览器标签间来回切换，文件操作集中在桌面客户端完成。</p>
+        </header>
+        <div class="feature-rail">
+          <article>
+            <h3>统一浏览与传输</h3>
+            <p>多账号并行在线，上传下载可暂停、取消，并保留历史记录。</p>
+          </article>
+          <article>
+            <h3>跨盘同步与分享</h3>
+            <p>选中文件一键同步到其他网盘，汇总各盘原生永久分享链接。</p>
+          </article>
+          <article>
+            <h3>映射到此电脑</h3>
+            <p>基于 WinFsp 虚拟盘，在资源管理器里像本地文件夹一样打开网盘。</p>
+          </article>
+          <article>
+            <h3>凭证只留本机</h3>
+            <p>账号与 Cookie 加密保存在本机；核销服务只处理 VIP，不读取网盘内容。</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="providers" class="section section-alt">
+        <header class="section-head">
+          <h2>已接入的网盘</h2>
+          <p>持续扩展；登录方式含扫码、网页授权或 Cookie / WebDAV。</p>
+        </header>
+        <ul class="provider-grid">
+          <li>123 网盘</li>
+          <li>阿里云盘</li>
+          <li>蓝奏云</li>
+          <li>百度网盘</li>
+          <li>小米云盘</li>
+          <li>夸克网盘</li>
+          <li>115 网盘</li>
+          <li>中国科技云数据胶囊</li>
+        </ul>
+      </section>
+
+      <section id="vip" class="section">
+        <header class="section-head">
+          <h2>免费可用，VIP 更省心</h2>
+          <p>同一激活码支持多台设备：换电脑输入同码即可同步权益，无需重新购买。</p>
+        </header>
+        <div class="vip-compare" role="table" aria-label="权益对比">
+          <div class="vip-row vip-head" role="row">
+            <span role="columnheader">权益</span>
+            <span role="columnheader">免费</span>
+            <span role="columnheader">VIP</span>
+          </div>
+          <div class="vip-row" role="row">
+            <span>可添加网盘数量</span>
+            <span>最多 2 个</span>
+            <span>不限制</span>
+          </div>
+          <div class="vip-row" role="row">
+            <span>映射到此电脑</span>
+            <span>最多 1 个</span>
+            <span>不限制</span>
+          </div>
+          <div class="vip-row" role="row">
+            <span>多设备登录</span>
+            <span>仅本机</span>
+            <span>同码最多 3 台</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="download" class="section section-download">
+        <header class="section-head">
+          <h2>下载网兜</h2>
+          <p>当前提供 Windows 客户端。发布包可挂到 GitHub Releases 或 Gitee 发行版。</p>
+        </header>
+        <div class="download-panel">
+          <a class="btn btn-primary btn-lg" id="link-release" href="#" rel="noopener">
+            获取最新安装包
+          </a>
+          <div class="download-links">
+            <a id="link-github" href="#" rel="noopener noreferrer">GitHub</a>
+            <a id="link-gitee" href="#" rel="noopener noreferrer">Gitee</a>
+          </div>
+          <p class="help" id="download-hint">
+            若链接尚未配置，请在 <code>config.js</code> 中填写仓库与 Releases 地址。
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-brand">
+        <img src="assets/app-icon.png" alt="" width="28" height="28" />
+        <span>网兜</span>
+      </div>
+      <p>多网盘统一管理客户端 · Windows</p>
+      <p class="footer-meta">© <span id="year"></span> 网兜 · 静态站适合 GitHub Pages / Gitee Pages</p>
+    </footer>
+
+    <script src="config.js"></script>
+    <script src="main.js"></script>
+  </body>
+</html>
