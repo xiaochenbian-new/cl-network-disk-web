@@ -95,12 +95,9 @@
     } else if (list.length === 1) {
       hint.textContent = "安装后可在应用内开通 VIP。";
     } else {
-      hint.textContent = "尚未配置下载地址。请在 cl-license 管理后台「下载配置」中填写。";
+      hint.textContent = "安装包准备中，请稍后再来。";
     }
   }
-
-  setHref("link-github", cfg.githubUrl, true);
-  setHref("link-gitee", cfg.giteeUrl, true);
 
   var hint = document.getElementById("download-hint");
   if (hint) hint.textContent = "正在读取下载地址…";
