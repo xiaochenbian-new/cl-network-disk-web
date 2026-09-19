@@ -115,7 +115,6 @@
           <li>小米云盘</li>
           <li>夸克网盘</li>
           <li>115 网盘</li>
-          <li>中国科技云数据胶囊</li>
         </ul>
       </section>
 
@@ -151,18 +150,16 @@
       <section id="download" class="section section-download">
         <header class="section-head">
           <h2>下载网兜</h2>
-          <p>当前提供 Windows 客户端。发布包可挂到 GitHub Releases 或 Gitee 发行版。</p>
+          <p>当前提供 Windows 客户端。可在配置中填写多个下载地址，任一可访问即可安装。</p>
         </header>
         <div class="download-panel">
-          <a class="btn btn-primary btn-lg" id="link-release" href="#" rel="noopener">
-            获取最新安装包
-          </a>
+          <div class="download-list" id="download-list"></div>
           <div class="download-links">
             <a id="link-github" href="#" rel="noopener noreferrer">GitHub</a>
             <a id="link-gitee" href="#" rel="noopener noreferrer">Gitee</a>
           </div>
           <p class="help" id="download-hint">
-            若链接尚未配置，请在 <code>config.js</code> 中填写仓库与 Releases 地址。
+            若链接尚未配置，请在 cl-license 管理后台的「下载配置」中填写。
           </p>
         </div>
       </section>

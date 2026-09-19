@@ -14,14 +14,22 @@ npx --yes serve .
 
 ## 配置下载 / 仓库链接
 
-编辑 [`config.js`](./config.js)：
+下载地址在 **cl-license** 管理后台配置，不写死在官网里。
+
+1. 打开 `https://cl-license.pages.dev/admin.html`
+2. 左侧切到对应应用（网兜为 `wangdou`）
+3. 打开 **下载配置**，可添加多个地址（名称、链接、说明）
+4. 保存后，官网请求 `GET /api/plans?appId=wangdou`，使用返回的 `downloads`
+
+`config.js` 只保留核销站地址；`downloads` 仅在接口不可用时作为备用：
 
 ```js
 window.WANGDOU_SITE = {
-  releaseUrl: "https://github.com/<user>/<repo>/releases/latest",
+  licenseApi: "https://cl-license.pages.dev",
+  appId: "wangdou",
+  downloads: [],
   githubUrl: "https://github.com/<user>/<repo>",
-  giteeUrl: "https://gitee.com/<user>/<repo>",
-  githubReleasesUrl: "https://github.com/<user>/<repo>/releases"
+  giteeUrl: "https://gitee.com/<user>/<repo>"
 };
 ```
 

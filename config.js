@@ -2,15 +2,18 @@
  * 官网链接配置
  * Cloudflare Pages：https://cl-network-disk-web.pages.dev/
  * GitHub Pages：https://xiaochenbian-new.github.io/cl-network-disk-web/
+ *
+ * 下载地址以 cl-license 为准（管理后台「下载配置」）。
+ * 下面的 downloads 仅在核销接口不可用时作为备用。
  */
 window.WANGDOU_SITE = {
-  /** Windows 安装包 / Releases 页（有安装包后改这里） */
-  releaseUrl: "https://github.com/xiaochenbian-new/cl-network-disk-web/releases/latest",
+  licenseApi: "https://cl-license.pages.dev",
+  appId: "wangdou",
+  /** 备用下载地址，正常情况留空 */
+  downloads: [],
   /** 源码仓库 */
   githubUrl: "https://github.com/xiaochenbian-new/cl-network-disk-web",
   giteeUrl: "https://gitee.com/xiaochenbian/cl-network-disk-web",
-  /** Releases 列表 */
-  githubReleasesUrl: "https://github.com/xiaochenbian-new/cl-network-disk-web/releases",
   /** Cloudflare Pages 官网 */
   cloudflareUrl: "https://cl-network-disk-web.pages.dev/"
 };
