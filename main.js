@@ -99,6 +99,53 @@
     }
   }
 
+  function renderProviders(list) {
+    var root = document.getElementById("provider-grid");
+    if (!root || !Array.isArray(list)) return;
+    var items = list
+      .map(function (name) {
+        return String(name || "").trim();
+      })
+      .filter(Boolean);
+    root.textContent = "";
+    items.forEach(function (name) {
+      var li = document.createElement("li");
+      li.textContent = name;
+      root.appendChild(li);
+    });
+  }
+
+  function renderBenefits(list) {
+    var root = document.getElementById("vip-compare");
+    if (!root || !Array.isArray(list)) return;
+    Array.prototype.forEach.call(root.querySelectorAll(".vip-row:not(.vip-head)"), function (el) {
+      el.remove();
+    });
+    list.forEach(function (item) {
+      if (!item) return;
+      var label = String(item.label || "").trim();
+      var free = String(item.free || "").trim();
+      var vip = String(item.vip || "").trim();
+      if (!label && !free && !vip) return;
+      var row = document.createElement("div");
+      row.className = "vip-row";
+      row.setAttribute("role", "row");
+      [label || "—", free || "—", vip || "—"].forEach(function (text) {
+        var span = document.createElement("span");
+        span.textContent = text;
+        row.appendChild(span);
+      });
+      root.appendChild(row);
+    });
+  }
+
+  function applyShop(data) {
+    applyDownloads(collectDownloads(data));
+    var about = data && data.about;
+    if (about && Array.isArray(about.providers)) renderProviders(about.providers);
+    if (data && Array.isArray(data.benefits)) renderBenefits(data.benefits);
+  }
+
   var hint = document.getElementById("download-hint");
   if (hint) hint.textContent = "正在读取下载地址…";
 
@@ -112,7 +159,7 @@
     })
     .then(function (data) {
       if (!data || !data.ok) throw new Error("plans");
-      applyDownloads(collectDownloads(data));
+      applyShop(data);
     })
     .catch(function () {
       applyDownloads(collectDownloads(cfg));
