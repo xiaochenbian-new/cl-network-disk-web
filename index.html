@@ -3,13 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="baidu-site-verification" content="codeva-i955edjtOD" />
     <meta
       name="description"
-      content="网兜 — 多网盘统一管理客户端。浏览、上传下载、跨盘同步与分享，并把网盘映射成 Windows 虚拟盘。"
+      content="网兜是多网盘统一管理客户端：支持百度网盘、阿里云盘、夸克、123、115 等，浏览上传下载、跨盘同步与分享，并可映射成 Windows 虚拟盘。"
+    />
+    <meta
+      name="keywords"
+      content="网兜,多网盘管理,网盘客户端,百度网盘,阿里云盘,夸克网盘,123网盘,115网盘,跨盘同步,网盘映射,虚拟盘"
     />
     <meta name="theme-color" content="#0b3d3a" />
-    <title>网兜 — 多网盘统一管理</title>
+    <title>网兜 — 多网盘统一管理客户端｜百度/阿里/夸克/123</title>
+    <link rel="canonical" href="https://wangdou.win/" />
     <link rel="icon" href="assets/app-icon.png" type="image/png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://wangdou.win/" />
+    <meta property="og:title" content="网兜 — 多网盘统一管理客户端" />
+    <meta
+      property="og:description"
+      content="把百度、阿里、夸克、123、115 等多家网盘收进同一个窗口：浏览、传输、跨盘同步，映射到此电脑。"
+    />
+    <meta property="og:image" content="https://wangdou.win/assets/app-icon.png" />
+    <meta property="og:locale" content="zh_CN" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -17,6 +32,23 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "网兜",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Windows",
+        "url": "https://wangdou.win/",
+        "image": "https://wangdou.win/assets/app-icon.png",
+        "description": "多网盘统一管理客户端。支持百度网盘、阿里云盘、夸克、123、115 等，浏览上传下载、跨盘同步与分享，并可映射成 Windows 虚拟盘。",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "CNY"
+        }
+      }
+    </script>
   </head>
   <body>
     <div class="page-bg" aria-hidden="true">
@@ -27,13 +59,14 @@
 
     <header class="site-header">
       <a class="brand" href="#top" aria-label="网兜首页">
-        <img src="assets/app-icon.png" alt="" width="36" height="36" />
+        <img src="assets/app-icon.png" alt="网兜" width="36" height="36" />
         <span>网兜</span>
       </a>
       <nav class="nav" aria-label="主导航">
         <a href="#features">功能</a>
         <a href="#providers">网盘</a>
         <a href="#vip">VIP</a>
+        <a href="#contact" hidden>联系</a>
         <a href="#download" class="nav-cta">下载</a>
       </nav>
     </header>
@@ -41,10 +74,12 @@
     <main id="top">
       <section class="hero">
         <div class="hero-copy">
-          <p class="brand-hero">网兜</p>
-          <h1>把多家网盘，收进同一个窗口</h1>
+          <h1>
+            <span class="brand-hero">网兜</span>
+            <span class="hero-tagline">把多家网盘，收进同一个窗口</span>
+          </h1>
           <p class="hero-lead">
-            浏览 · 上传下载 · 跨盘同步与分享，还能映射成 Windows「此电脑」里的虚拟盘。
+            多网盘统一管理客户端：浏览 · 上传下载 · 跨盘同步与分享，还能把百度网盘、阿里云盘、夸克等映射成 Windows「此电脑」里的虚拟盘。
           </p>
           <div class="hero-actions">
             <a class="btn btn-primary" id="btn-download" href="#download">下载 Windows 版</a>
@@ -79,8 +114,8 @@
 
       <section id="features" class="section">
         <header class="section-head">
-          <h2>一个窗口，管完常用网盘</h2>
-          <p>不必在浏览器标签间来回切换，文件操作集中在桌面客户端完成。</p>
+          <h2>网兜：一个窗口，管完常用网盘</h2>
+          <p>不必在浏览器标签间来回切换，多网盘文件操作集中在桌面客户端完成。</p>
         </header>
         <div class="feature-rail">
           <article>
@@ -147,6 +182,14 @@
         </div>
       </section>
 
+      <section id="contact" class="section section-alt" hidden>
+        <header class="section-head">
+          <h2>联系方式</h2>
+          <p>与客户端「关于」里配置的联系渠道一致。</p>
+        </header>
+        <div class="contact-grid" id="contact-list"></div>
+      </section>
+
       <section id="download" class="section section-download">
         <header class="section-head">
           <h2>下载网兜</h2>
@@ -160,10 +203,11 @@
 
     <footer class="site-footer">
       <div class="footer-brand">
-        <img src="assets/app-icon.png" alt="" width="28" height="28" />
+        <img src="assets/app-icon.png" alt="网兜" width="28" height="28" />
         <span>网兜</span>
       </div>
       <p>多网盘统一管理客户端 · Windows</p>
+      <div class="footer-contacts" id="footer-contacts" hidden></div>
       <p class="footer-meta">© <span id="year"></span> 网兜</p>
     </footer>
 

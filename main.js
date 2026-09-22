@@ -144,6 +144,86 @@
     var about = data && data.about;
     if (about && Array.isArray(about.providers)) renderProviders(about.providers);
     if (data && Array.isArray(data.benefits)) renderBenefits(data.benefits);
+    renderContacts(data && data.contacts);
+  }
+
+  function contactHref(item) {
+    var url = httpUrl(item.url);
+    if (url) return url;
+    if (item.type === "url") return httpUrl(item.value);
+    if (item.type === "email" && item.value.indexOf("@") > 0) return "mailto:" + item.value;
+    return "";
+  }
+
+  function renderContacts(list) {
+    var section = document.getElementById("contact");
+    var root = document.getElementById("contact-list");
+    var footer = document.getElementById("footer-contacts");
+    var nav = document.querySelector('.nav a[href="#contact"]');
+    var items = (Array.isArray(list) ? list : [])
+      .map(function (raw) {
+        if (!raw || typeof raw !== "object") return null;
+        var value = String(raw.value || "").trim();
+        if (!value) return null;
+        return {
+          label: String(raw.label || raw.type || "联系方式").trim() || "联系方式",
+          value: value,
+          href: contactHref(raw),
+          qrUrl: httpUrl(raw.qrUrl)
+        };
+      })
+      .filter(Boolean);
+
+    if (root) root.textContent = "";
+    if (footer) footer.textContent = "";
+    var visible = items.length > 0;
+    if (section) section.hidden = !visible;
+    if (footer) footer.hidden = !visible;
+    if (nav) nav.hidden = !visible;
+    if (!visible) return;
+
+    items.forEach(function (item) {
+      var card = document.createElement("article");
+      card.className = "contact-card";
+
+      var label = document.createElement("span");
+      label.className = "contact-card-label";
+      label.textContent = item.label;
+
+      var value = document.createElement(item.href ? "a" : "span");
+      value.className = "contact-card-value";
+      value.textContent = item.value;
+      if (item.href) {
+        value.setAttribute("href", item.href);
+        if (/^https?:\/\//i.test(item.href)) {
+          value.setAttribute("target", "_blank");
+          value.setAttribute("rel", "noopener noreferrer");
+        }
+      }
+
+      card.appendChild(label);
+      card.appendChild(value);
+      if (item.qrUrl && root) {
+        var img = document.createElement("img");
+        img.src = item.qrUrl;
+        img.alt = item.label + "二维码";
+        card.appendChild(img);
+      }
+      if (root) root.appendChild(card);
+
+      if (footer) {
+        var foot = document.createElement(item.href ? "a" : "span");
+        foot.textContent = item.label + "：" + item.value;
+        if (item.href) {
+          foot.setAttribute("href", item.href);
+          if (/^https?:\/\//i.test(item.href)) {
+            foot.setAttribute("target", "_blank");
+            foot.setAttribute("rel", "noopener noreferrer");
+          }
+        }
+        footer.appendChild(foot);
+      }
+    });
   }
 
   var hint = document.getElementById("download-hint");
@@ -163,5 +243,6 @@
     })
     .catch(function () {
       applyDownloads(collectDownloads(cfg));
+      renderContacts([]);
     });
 })();

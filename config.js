@@ -4,7 +4,7 @@
  * GitHub Pages：https://xiaochenbian-new.github.io/cl-network-disk-web/
  *
  * 下载地址、已接入网盘、权益对比以 cl-license 为准。
- * 网盘读后台「关于」里的支持网盘，权益对比读「开通 VIP」。
+ * 网盘读后台「关于」里的支持网盘，联系方式读同一页的联系渠道，权益对比读「开通 VIP」。
  * 下面的 downloads 仅在核销接口不可用时作为备用。
  */
 window.WANGDOU_SITE = {
