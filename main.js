@@ -158,7 +158,6 @@
   function renderContacts(list) {
     var section = document.getElementById("contact");
     var root = document.getElementById("contact-list");
-    var footer = document.getElementById("footer-contacts");
     var nav = document.querySelector('.nav a[href="#contact"]');
     var items = (Array.isArray(list) ? list : [])
       .map(function (raw) {
@@ -175,10 +174,8 @@
       .filter(Boolean);
 
     if (root) root.textContent = "";
-    if (footer) footer.textContent = "";
     var visible = items.length > 0;
     if (section) section.hidden = !visible;
-    if (footer) footer.hidden = !visible;
     if (nav) nav.hidden = !visible;
     if (!visible) return;
 
@@ -210,19 +207,6 @@
         card.appendChild(img);
       }
       if (root) root.appendChild(card);
-
-      if (footer) {
-        var foot = document.createElement(item.href ? "a" : "span");
-        foot.textContent = item.label + "：" + item.value;
-        if (item.href) {
-          foot.setAttribute("href", item.href);
-          if (/^https?:\/\//i.test(item.href)) {
-            foot.setAttribute("target", "_blank");
-            foot.setAttribute("rel", "noopener noreferrer");
-          }
-        }
-        footer.appendChild(foot);
-      }
     });
   }
 
