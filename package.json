@@ -4,8 +4,8 @@
   "description": "网兜官网（Cloudflare Pages 静态站）",
   "scripts": {
     "dev": "wrangler pages dev .",
-    "deploy": "wrangler pages deploy . --project-name=cl-network-disk-web --branch production",
-    "deploy:preview": "wrangler pages deploy . --project-name=cl-network-disk-web --branch main"
+    "deploy": "wrangler pages deploy . --project-name=cl-network-disk-web --branch production --commit-dirty=true",
+    "deploy:preview": "wrangler pages deploy . --project-name=cl-network-disk-web --branch main --commit-dirty=true"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"
