@@ -213,7 +213,7 @@
   var hint = document.getElementById("download-hint");
   if (hint) hint.textContent = "正在读取下载地址…";
 
-  var api = String(cfg.licenseApi || "https://cl-license.pages.dev").replace(/\/+$/, "");
+  var api = String(cfg.licenseApi || "https://license.wangdou.win").replace(/\/+$/, "");
   var appId = String(cfg.appId || "wangdou").trim() || "wangdou";
 
   fetch(api + "/api/plans?appId=" + encodeURIComponent(appId))

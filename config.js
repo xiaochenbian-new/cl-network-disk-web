@@ -3,18 +3,27 @@
  * Cloudflare Pages：https://cl-network-disk-web.pages.dev/
  * GitHub Pages：https://xiaochenbian-new.github.io/cl-network-disk-web/
  *
- * 下载地址、已接入网盘、权益对比以 cl-license 为准。
- * 网盘读后台「关于」里的支持网盘，联系方式读同一页的联系渠道，权益对比读「开通 VIP」。
- * 下面的 downloads 仅在核销接口不可用时作为备用。
+ * 核销 API：生产 → license.wangdou.win；测试（GitHub Pages / main.* Preview）→ main.cl-license.pages.dev
  */
-window.WANGDOU_SITE = {
-  licenseApi: "https://cl-license.pages.dev",
-  appId: "wangdou",
-  /** 备用下载地址，正常情况留空 */
-  downloads: [],
-  /** 源码仓库 */
-  githubUrl: "https://github.com/xiaochenbian-new/cl-network-disk-web",
-  giteeUrl: "https://gitee.com/xiaochenbian/cl-network-disk-web",
-  /** Cloudflare Pages 官网 */
-  cloudflareUrl: "https://cl-network-disk-web.pages.dev/"
-};
+(function () {
+  function isTestHost(hostname) {
+    var h = String(hostname || "").toLowerCase();
+    if (!h) return false;
+    if (h === "localhost" || h === "127.0.0.1") return true;
+    if (h.indexOf("github.io") !== -1) return true;
+    if (h.indexOf("main.") === 0) return true;
+    return false;
+  }
+
+  var test = typeof location !== "undefined" && isTestHost(location.hostname);
+  window.WANGDOU_SITE = {
+    licenseApi: test
+      ? "https://main.cl-license.pages.dev"
+      : "https://license.wangdou.win",
+    appId: "wangdou",
+    downloads: [],
+    githubUrl: "https://github.com/xiaochenbian-new/cl-network-disk-web",
+    giteeUrl: "https://gitee.com/xiaochenbian/cl-network-disk-web",
+    cloudflareUrl: "https://cl-network-disk-web.pages.dev/"
+  };
+})();
