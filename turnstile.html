@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>人机验证 - 网兜</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Noto Sans SC", system-ui, sans-serif;
+        background: #f6f8f7;
+        color: #17322f;
+      }
+      .box {
+        text-align: center;
+        padding: 28px 24px;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        min-width: 300px;
+      }
+      h1 { font-size: 1.05rem; margin: 0 0 10px; }
+      p { font-size: 0.85rem; color: #6b7a77; margin: 0 0 16px; }
+      #status.err { color: #d4380d; }
+    </style>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+  </head>
+  <body>
+    <div class="box">
+      <h1>人机验证</h1>
+      <p id="status">正在加载验证组件…</p>
+      <div id="host"></div>
+    </div>
+    <script>
+      // 供网兜客户端的小窗调用：?sitekey=<Turnstile站点密钥>
+      // 完成后把 token 写入 document.title（主进程监听 page-title-updated 捕获）并自动关窗。
+      (function () {
+        var status = document.getElementById("status");
+        var siteKey = "";
+        try {
+          siteKey = (new URLSearchParams(location.search).get("sitekey") || "").trim();
+        } catch (e) {}
+
+        function fail(text) {
+          status.textContent = text;
+          status.className = "err";
+          document.title = "TURNSTILE:error";
+        }
+
+        if (!siteKey) {
+          fail("缺少验证参数，请从网兜客户端重新发起");
+          return;
+        }
+
+        function render() {
+          if (!window.turnstile) {
+            setTimeout(render, 200);
+            return;
+          }
+          status.textContent = "请完成验证，完成后本窗口会自动关闭";
+          window.turnstile.render(document.getElementById("host"), {
+            sitekey: siteKey,
+            callback: function (token) {
+              status.textContent = "验证通过，正在返回网兜…";
+              document.title = "TURNSTILE_TOKEN:" + token;
+              setTimeout(function () { window.close(); }, 400);
+            },
+            "expired-callback": function () {
+              status.textContent = "验证已过期，请重试";
+            },
+            "error-callback": function () {
+              fail("验证组件出错，请关闭窗口重试");
+            },
+          });
+        }
+
+        if (document.readyState === "complete") render();
+        else window.addEventListener("load", render);
+      })();
+    </script>
+  </body>
+</html>
