@@ -29,7 +29,7 @@
     captchaId: "",
     encKey: null, // 派生密钥（内存），用于把账号变更重新加密上传云端备份
     encSalt: null,
-    supported: { "123": "123", baidu: "百度", aliyun: "阿里" },
+    supported: { "123": "123", baidu: "百度", aliyun: "阿里", quark: "夸克", "115": "115" },
     providerNames: {
       "123": "123 网盘",
       aliyun: "阿里云盘",
@@ -103,14 +103,18 @@
     return out.buffer;
   }
 
-  async function deriveKey(password, encSaltB64) {
+  async function deriveKeyBits(password, encSaltB64) {
     var enc = new TextEncoder();
     var keyMaterial = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveBits"]);
-    var bits = await crypto.subtle.deriveBits(
+    return crypto.subtle.deriveBits(
       { name: "PBKDF2", hash: "SHA-256", salt: new Uint8Array(b64ToBuf(encSaltB64)), iterations: KDF_ITERATIONS },
       keyMaterial,
       256
     );
+  }
+
+  async function deriveKey(password, encSaltB64) {
+    var bits = await deriveKeyBits(password, encSaltB64);
     return crypto.subtle.importKey("raw", bits, { name: "AES-GCM" }, false, ["decrypt", "encrypt"]);
   }
 
@@ -252,6 +256,8 @@
     state.spaceInfo = {};
     state.encKey = null;
     state.encSalt = null;
+    sessionStorage.removeItem("wd_enckey");
+    sessionStorage.removeItem("wd_ensalt");
     stopPlayer();
     $("player").hidden = true;
     renderMedia();
@@ -290,11 +296,15 @@
       console.log("[网兜Web] 登录成功；云端备份长度 =", (r.cloud || "").length, "；盐 =", r.encSalt);
       if (r.cloud && r.encSalt) {
         try {
-          var key = await deriveKey(password, r.encSalt);
+          var bits = await deriveKeyBits(password, r.encSalt);
+          var key = await crypto.subtle.importKey("raw", bits, { name: "AES-GCM" }, false, ["decrypt", "encrypt"]);
           var payload = await decryptBlob(r.cloud, key);
           state.accounts = payload.accounts || [];
           state.encKey = key;
           state.encSalt = r.encSalt;
+          // 密钥存 sessionStorage：刷新本标签页可自动恢复，关标签页即失效，服务器不可见
+          sessionStorage.setItem("wd_enckey", bufToB64(bits));
+          sessionStorage.setItem("wd_ensalt", r.encSalt);
           console.log("[网兜Web] 解密成功，账号数 =", state.accounts.length);
           unlockMsg = "已解密 " + state.accounts.length + " 个云端备份账号";
         } catch (err) {
@@ -923,24 +933,38 @@
     }
   }
 
+  function utf8ToB64url(s) {
+    var bytes = new TextEncoder().encode(s);
+    var bin = "";
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+
+  var downloadUrlFor = (f, accOverride) => {
+    var a = accOverride || accountById(state.selectedId);
+    if (!a) throw new Error("请先选择账号");
+    var d = utf8ToB64url(JSON.stringify({
+      provider: a.provider,
+      auth: { accessToken: a.accessToken, cookie: a.cookie, driveId: a.driveId },
+      item: f,
+    }));
+    return "/api/app-download?token=" + encodeURIComponent(state.token) + "&d=" + d;
+  };
+
   function downloadFile(f) {
-    setMsg($("app-msg"), "获取下载地址…", false);
-    proxy("download", { item: f })
-      .then(function (r) {
-        if (!r.url) throw new Error("未获取到下载地址");
-        var a = document.createElement("a");
-        a.href = r.url;
-        a.download = f.filename;
-        a.target = "_blank";
-        a.rel = "noopener";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setMsg($("app-msg"), "已开始下载（若浏览器拦截弹窗请允许）", false);
-      })
-      .catch(function (err) {
-        setMsg($("app-msg"), err instanceof Error ? err.message : String(err), true);
-      });
+    try {
+      var a = document.createElement("a");
+      a.href = downloadUrlFor(f);
+      a.download = f.filename;
+      a.target = "_blank";
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setMsg($("app-msg"), "已开始下载（大文件由服务器流式转发）", false);
+    } catch (err) {
+      setMsg($("app-msg"), err instanceof Error ? err.message : String(err), true);
+    }
   }
 
   function askModal(title, fields, onOk) {
@@ -1181,18 +1205,13 @@
     if (!track) return;
     $("player").hidden = false;
     $("player-title").textContent = track.filename;
-    try {
-      var r = await proxy("download", { item: track });
-      var audio = plAudio();
-      audio.src = r.url;
-      audio.play().then(function () {
-        $("pl-play").textContent = "⏸";
-        $("player-disc").className = "player-disc is-playing";
-      }).catch(function () { /* 自动播放被拦截时由用户点播放 */ });
-      renderPlaylist();
-    } catch (err) {
-      setMsg($("media-msg"), err instanceof Error ? err.message : String(err), true);
-    }
+    var audio = plAudio();
+    audio.src = downloadUrlFor(track);
+    audio.play().then(function () {
+      $("pl-play").textContent = "⏸";
+      $("player-disc").className = "player-disc is-playing";
+    }).catch(function () { /* 自动播放被拦截时由用户点播放 */ });
+    renderPlaylist();
   }
 
   function plToggle() {
@@ -1266,7 +1285,7 @@
   // 侧栏宽度拖动（对齐应用端：左侧列表与右侧内容可调）
   (function initSideResize() {
     var saved = Number(localStorage.getItem("wd_side_w"));
-    if (saved >= 200 && saved <= 480) $("view-app").querySelector(".side").style.width = saved + "px";
+    if (saved >= 200 && saved <= 480) $("view-app").querySelector(".side").style.flex = "0 0 " + saved + "px";
     var resizer = document.createElement("div");
     resizer.className = "side-resizer";
     resizer.title = "拖动调整宽度";
@@ -1281,15 +1300,16 @@
     });
     document.addEventListener("mousemove", function (e) {
       if (!dragging) return;
+      // 侧栏是 flex 项，flex-basis 优先于 width，必须改 flex
       var w = Math.min(480, Math.max(200, e.clientX));
-      side.style.width = w + "px";
+      side.style.flex = "0 0 " + w + "px";
     });
     document.addEventListener("mouseup", function () {
       if (!dragging) return;
       dragging = false;
       document.body.style.cursor = "";
       document.body.style.userSelect = "";
-      var w = parseInt(side.style.width, 10);
+      var w = parseInt(side.style.flex.replace(/[^0-9]/g, ""), 10);
       if (w) localStorage.setItem("wd_side_w", String(w));
     });
   })();
@@ -1348,12 +1368,33 @@
     });
   })();
 
-  // 已有会话 token：刷新后凭证不在内存，回到登录视图要求重新输密码解密
-  if (state.token && state.email) {
-    $("login-email").value = state.email;
+  // 刷新自动恢复：token + sessionStorage 里的派生密钥都还在时，直接解密进入
+  (async function tryRestore() {
+    var storedKey = sessionStorage.getItem("wd_enckey");
+    var storedSalt = sessionStorage.getItem("wd_ensalt");
+    if (!state.token || !state.email || !storedKey || !storedSalt) { showLogin(); return; }
     showLogin();
-    setMsg($("login-msg"), "会话仍有效，输入密码解锁云端备份（凭证只在内存，刷新后需重新解密）", false);
-  } else {
-    showLogin();
-  }
+    setMsg($("login-msg"), "正在恢复会话…", false);
+    try {
+      var cloud = await api("/api/user", { action: "session", token: state.token }, state.token);
+      if (!cloud.cloud) { sessionStorage.removeItem("wd_enckey"); showLogin(); setMsg($("login-msg"), "云端暂无备份", false); return; }
+      var key = await crypto.subtle.importKey(
+        "raw",
+        b64ToBuf(storedKey),
+        { name: "AES-GCM" },
+        false,
+        ["decrypt", "encrypt"]
+      );
+      var payload = await decryptBlob(cloud.cloud, key);
+      state.accounts = payload.accounts || [];
+      state.encKey = key;
+      state.encSalt = storedSalt;
+      showApp();
+      setMsg($("app-msg"), "已恢复 " + state.accounts.length + " 个云端备份账号", false);
+    } catch (err) {
+      sessionStorage.removeItem("wd_enckey");
+      showLogin();
+      setMsg($("login-msg"), "会话恢复失败，请重新登录：" + (err instanceof Error ? err.message : String(err)), true);
+    }
+  })();
 })();

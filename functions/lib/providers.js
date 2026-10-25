@@ -489,6 +489,172 @@ async function aliyunDownload(auth, item) {
   return { url: data.url };
 }
 
+
+/* ---------------- 夸克网盘（列表/空间/下载） ---------------- */
+
+const QUARK_API = "https://drive-pc.quark.cn/1/clouddrive";
+
+function quarkHeaders(auth) {
+  return {
+    Cookie: auth.cookie,
+    "user-agent": PAN_UA + " QuarkPC/2.5.56",
+    referer: "https://pan.quark.cn/",
+    "content-type": "application/json",
+  };
+}
+
+async function quarkRequest(auth, method, url, body) {
+  const hasBody = body !== undefined && method !== "GET";
+  const res = await fetch(url, {
+    method,
+    headers: quarkHeaders(auth),
+    body: hasBody ? JSON.stringify(body) : undefined,
+  });
+  const json = await res.json();
+  if (json.status >= 400 || (json.code !== undefined && json.code !== 0)) {
+    throw new Error(json.message || `夸克请求失败 code=${json.code}`);
+  }
+  return json;
+}
+
+async function quarkList(auth, parentFileId) {
+  const items = [];
+  let page = 1;
+  const size = 100;
+  for (let i = 0; i < 40; i++) {
+    const q = new URLSearchParams({
+      pr: "ucpro",
+      fr: "pc",
+      pdir_fid: String(parentFileId || "0"),
+      _page: String(page),
+      _size: String(size),
+      _fetch_total: "1",
+      _fetch_sub_dirs: "0",
+      _sort: "file_type:asc,updated_at:desc",
+    });
+    const json = await quarkRequest(auth, "GET", `${QUARK_API}/file/sort?${q.toString()}`);
+    const list = json.data?.list || [];
+    for (const f of list) {
+      if (!f.fid || !f.file_name) continue;
+      items.push({
+        fileId: f.fid,
+        filename: f.file_name,
+        isFolder: f.file === false,
+        size: Number(f.size || 0),
+        updateAt: f.updated_at || f.l_updated_at ? new Date(f.updated_at || f.l_updated_at).toISOString() : undefined,
+      });
+    }
+    const total = Number(json.metadata?._total || 0);
+    if (page * size >= total || list.length < size) break;
+    page += 1;
+  }
+  return items;
+}
+
+async function quarkSpace(auth) {
+  const json = await quarkRequest(auth, "GET", `${QUARK_API}/member?pr=ucpro&fr=pc&uc_param_str=`);
+  const data = json.data || {};
+  const used = Number(data.use_capacity ?? data.used_capacity ?? data.used ?? 0);
+  const total = Number(data.total_capacity ?? data.total_capacity ?? data.capacity ?? 0);
+  return { usedBytes: used, totalBytes: total || undefined };
+}
+
+async function quarkDownload(auth, item) {
+  const json = await quarkRequest(
+    auth,
+    "POST",
+    `${QUARK_API}/file/download?pr=ucpro&fr=pc&sys=win32&ve=2.5.56`,
+    { fids: [item.fileId] }
+  );
+  const url = String(json.data?.[0]?.download_url || "");
+  if (!url) throw new Error("获取夸克下载地址失败");
+  return { url, fetchHeaders: { Cookie: auth.cookie, referer: "https://pan.quark.cn/", "user-agent": PAN_UA } };
+}
+
+/* ---------------- 115 网盘（列表/空间/下载） ---------------- */
+
+const W115 = "https://webapi.115.com";
+
+function p115Headers(auth) {
+  return {
+    Cookie: auth.cookie,
+    "User-Agent": PAN_UA,
+    Referer: "https://115.com/",
+    Origin: "https://115.com",
+    Accept: "application/json, text/javascript, */*; q=0.01",
+  };
+}
+
+async function p115Request(auth, url) {
+  const res = await fetch(url, { headers: p115Headers(auth) });
+  const json = await res.json();
+  if (json.state === false) throw new Error(json.error || json.message || "115 请求失败，Cookie 可能已失效");
+  return json;
+}
+
+async function p115List(auth, parentFileId) {
+  const cid = String(parentFileId || "0");
+  const items = [];
+  let offset = 0;
+  const limit = 100;
+  for (let i = 0; i < 40; i++) {
+    const q = new URLSearchParams({
+      aid: "1",
+      cid,
+      o: "user_ptime",
+      asc: "0",
+      offset: String(offset),
+      show_dir: "1",
+      limit: String(limit),
+      snap: "0",
+      natsort: "1",
+      format: "json",
+    });
+    const json = await p115Request(auth, `${W115}/files?${q.toString()}`);
+    const list = json.data || [];
+    for (const f of list) {
+      const folder = !String(f.fid || "").trim() || String(f.fid || "") === "0" || String(f.fc) === "1";
+      const fileId = folder ? String(f.cid || "") : String(f.fid || "");
+      const name = String(f.n || "").trim();
+      if (!fileId || !name) continue;
+      items.push({
+        fileId,
+        filename: name,
+        isFolder: folder,
+        size: Number(f.s || 0),
+        etag: f.pc || undefined,
+      });
+    }
+    const count = Number(json.count || 0);
+    offset += list.length;
+    if (!list.length || offset >= count) break;
+  }
+  return items;
+}
+
+async function p115Space(auth) {
+  const json = await p115Request(auth, `${W115}/files/index_info`);
+  const data = json.data || {};
+  const space = data.space_info || data.space || data;
+  const used = Number(space.all_use?.size ?? space.used ?? space.use_size ?? 0);
+  const total = Number(space.all_total?.size ?? space.total ?? space.total_size ?? 0);
+  return { usedBytes: used, totalBytes: total || undefined };
+}
+
+async function p115Download(auth, item) {
+  const pickcode = item.etag || "";
+  if (!pickcode) throw new Error("115 下载需要 pickcode，请重新扫描后再试");
+  const q = new URLSearchParams({ pickcode, _: String(Date.now()) });
+  const json = await p115Request(auth, `${W115}/files/download?${q.toString()}`);
+  const url = String(json.file_url || json.data?.file_url || json.url || "").trim();
+  if (!url) throw new Error("115 未返回下载链接");
+  return {
+    url,
+    fetchHeaders: { Cookie: auth.cookie, Referer: "https://115.com/", "User-Agent": PAN_UA },
+  };
+}
+
+
 /* ---------------- 分发 ---------------- */
 
 export const WEB_SUPPORTED = new Set(["123", "baidu", "aliyun"]);
@@ -539,6 +705,18 @@ export async function proxyAction(provider, action, auth, params) {
       return await quarkQrCreate();
     case "quark:qr-poll":
       return await quarkQrPoll(params);
+    case "quark:list":
+      return { items: await quarkList(auth, params.parentFileId) };
+    case "quark:space":
+      return await quarkSpace(auth);
+    case "quark:download":
+      return await quarkDownload(auth, params.item);
+    case "115:list":
+      return { items: await p115List(auth, params.parentFileId) };
+    case "115:space":
+      return await p115Space(auth);
+    case "115:download":
+      return await p115Download(auth, params.item);
     case "baidu:space":
       return await baiduSpace(auth);
     case "aliyun:space":
