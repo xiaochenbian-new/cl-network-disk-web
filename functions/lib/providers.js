@@ -681,6 +681,30 @@ export async function proxyAction(provider, action, auth, params) {
       return await baiduDelete(auth, params.items || []);
     case "baidu:download":
       return await baiduDownload(auth, params.item);
+    case "baidu:move": {
+      const filelist = (params.items || []).map((i) => ({
+        path: i.path || i.fileId,
+        dest: params.targetParentId || "/",
+        newname: i.filename,
+      }));
+      await baiduRequest(
+        baiduUrl("filemanager", { opera: "move", async: "0" }, auth.accessToken),
+        { filelist: JSON.stringify(filelist) }
+      );
+      return { ok: true };
+    }
+    case "baidu:copy": {
+      const filelist2 = (params.items || []).map((i) => ({
+        path: i.path || i.fileId,
+        dest: params.targetParentId || "/",
+        newname: i.filename,
+      }));
+      await baiduRequest(
+        baiduUrl("filemanager", { opera: "copy", async: "0" }, auth.accessToken),
+        { filelist: JSON.stringify(filelist2) }
+      );
+      return { ok: true };
+    }
     case "aliyun:list":
       return { items: await aliyunList(auth, params.parentFileId) };
     case "aliyun:mkdir":
@@ -691,8 +715,34 @@ export async function proxyAction(provider, action, auth, params) {
       return await aliyunDelete(auth, params.items || []);
     case "aliyun:download":
       return await aliyunDownload(auth, params.item);
+    case "aliyun:move":
+      for (const i of params.items || []) {
+        await aliyunRequest(auth, "/adrive/v1.0/openFile/move", {
+          drive_id: auth.driveId,
+          file_id: i.fileId,
+          to_parent_file_id: aliyunParent(params.targetParentId),
+          check_name_mode: "auto_rename",
+        });
+      }
+      return { ok: true };
+    case "aliyun:copy":
+      for (const i of params.items || []) {
+        await aliyunRequest(auth, "/adrive/v1.0/openFile/copy", {
+          drive_id: auth.driveId,
+          file_id: i.fileId,
+          to_parent_file_id: aliyunParent(params.targetParentId),
+          auto_rename: true,
+        });
+      }
+      return { ok: true };
     case "123:space":
       return await p123Space(auth);
+    case "123:move":
+      await p123Request(auth, "POST", `${B_API}/file/mod_pid`, {
+        fileIdList: (params.items || []).map((i) => ({ FileId: Number(i.fileId) })),
+        parentFileId: Number(params.targetParentId || 0),
+      });
+      return { ok: true };
     case "123:login":
       return await p123Login(params);
     case "aliyun:qr-create":

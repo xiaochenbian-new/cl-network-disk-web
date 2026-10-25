@@ -6,7 +6,7 @@
     <meta name="robots" content="noindex" />
     <title>网兜 Web 版</title>
     <link rel="icon" href="assets/app-icon.png" type="image/png" />
-    <link rel="stylesheet" href="app.css?v=20261025g" />
+    <link rel="stylesheet" href="app.css?v=20261026a" />
   </head>
   <body>
     <header class="topbar">
@@ -15,6 +15,7 @@
       <div class="topbar-actions">
         <button id="tab-files" class="btn btn-sm topbar-btn is-active" hidden>文件管理</button>
         <button id="tab-media" class="btn btn-sm topbar-btn" hidden>音乐视频</button>
+        <button id="btn-about" class="btn btn-sm topbar-btn" hidden>关于</button>
         <button id="btn-logout" class="btn btn-sm topbar-btn" hidden>退出登录</button>
       </div>
     </header>
@@ -23,7 +24,7 @@
     <main id="view-login" class="login-view">
       <div class="login-card">
         <h1 id="login-title">登录网兜 Web</h1>
-        <p class="hint" id="login-hint">使用网兜账号（邮箱 + 密码）登录。登录后将在本机解密云端备份的网盘账号，凭证不经服务器存储。</p>
+        <p class="hint" id="login-hint">使用网兜账号（邮箱 + 密码）登录。登录状态将保持在本机，无需每次刷新重新登录。</p>
         <label>邮箱<input id="login-email" type="email" placeholder="you@example.com" autocomplete="username" /></label>
         <label>密码<input id="login-password" type="password" placeholder="登录密码" autocomplete="current-password" /></label>
         <div id="register-fields" hidden>
@@ -50,34 +51,37 @@
 
     <!-- 主视图 -->
     <main id="view-app" class="app-view" hidden>
-      <aside class="side">
+      <aside class="side" id="side">
         <div class="side-head">
           存储账号
-          <button id="btn-add-account" type="button" class="side-add" title="添加网盘账号">＋ 添加</button>
+          <span class="side-head-btns">
+            <button id="btn-check" type="button" class="side-add" title="检测所有账号连通性">检测</button>
+            <button id="btn-add-account" type="button" class="side-add" title="添加网盘账号">＋ 添加</button>
+          </span>
         </div>
         <div id="account-banner" class="account-banner" hidden></div>
         <ul id="account-list" class="account-list"></ul>
         <p class="hint tight" id="account-hint"></p>
         <div id="player" class="player" hidden>
-          <div class="player-disc" id="player-disc"></div>
-          <div class="player-main">
-            <div class="player-title" id="player-title">未在播放</div>
+          <div class="player-title" id="player-title">未在播放</div>
+          <div class="player-line1">
+            <div class="player-disc" id="player-disc"></div>
             <div class="player-controls">
               <button id="pl-prev" class="pl-btn" title="上一首">⏮</button>
               <button id="pl-play" class="pl-btn" title="播放/暂停">▶</button>
               <button id="pl-next" class="pl-btn" title="下一首">⏭</button>
               <button id="pl-mode" class="pl-btn" title="播放模式：顺序">➡</button>
             </div>
-            <div class="player-progress">
-              <span class="pl-time" id="pl-time">00:00</span>
-              <input id="pl-seek" class="pl-seek" type="range" min="0" max="1000" value="0" />
-              <span class="pl-time" id="pl-duration">00:00</span>
-            </div>
-            <div class="player-volume">
-              <span class="hint tight">🔊</span>
-              <input id="pl-volume" class="pl-volume" type="range" min="0" max="100" value="80" />
-              <button id="pl-list" class="pl-btn" title="播放列表">☰</button>
-            </div>
+          </div>
+          <div class="player-progress">
+            <span class="pl-time" id="pl-time">00:00</span>
+            <input id="pl-seek" class="pl-seek" type="range" min="0" max="1000" value="0" />
+            <span class="pl-time" id="pl-duration">00:00</span>
+          </div>
+          <div class="player-volume">
+            <span class="hint tight">🔊</span>
+            <input id="pl-volume" class="pl-volume" type="range" min="0" max="100" value="80" />
+            <button id="pl-list" class="pl-btn" title="播放列表">☰</button>
           </div>
           <div id="pl-playlist" class="pl-playlist" hidden></div>
         </div>
@@ -86,6 +90,7 @@
           <div class="supported-grid" id="supported-grid"></div>
         </div>
       </aside>
+      <div class="side-resizer" id="side-resizer" title="拖动调整宽度"></div>
 
       <section class="main">
         <!-- 文件管理 -->
@@ -95,13 +100,29 @@
             <div class="toolbar-actions">
               <button id="btn-refresh" class="btn btn-sm">刷新</button>
               <button id="btn-mkdir" class="btn btn-sm">新建文件夹</button>
+              <button id="btn-upload" class="btn btn-sm" disabled title="Web 端上传即将支持">上传</button>
             </div>
+          </div>
+          <div id="batch-bar" class="batch-bar" hidden>
+            <span class="hint tight">已选 <b id="sel-count">0</b> 项</span>
+            <button id="btn-batch-dl" class="btn btn-sm">下载</button>
+            <button id="btn-batch-move" class="btn btn-sm">移动</button>
+            <button id="btn-batch-copy" class="btn btn-sm">复制</button>
+            <button id="btn-batch-rename" class="btn btn-sm">重命名</button>
+            <button id="btn-batch-del" class="btn btn-sm is-danger">删除</button>
+            <button id="btn-sel-all" class="btn btn-sm btn-ghost">全选/取消</button>
           </div>
           <p id="app-msg" class="msg"></p>
           <div class="table-wrap">
             <table class="file-table">
               <thead>
-                <tr><th class="col-check"></th><th>名称</th><th class="col-size">大小</th><th class="col-time">修改时间</th><th class="col-ops">操作</th></tr>
+                <tr>
+                  <th class="col-check"><input type="checkbox" id="check-all" /></th>
+                  <th>名称</th>
+                  <th class="col-size">大小</th>
+                  <th class="col-time">修改时间</th>
+                  <th class="col-ops">操作</th>
+                </tr>
               </thead>
               <tbody id="file-tbody">
                 <tr><td colspan="5" class="empty-cell">选择左侧账号浏览文件</td></tr>
@@ -141,6 +162,14 @@
             </table>
           </div>
         </div>
+
+        <!-- 关于 -->
+        <div id="page-about" class="page" hidden>
+          <h2>关于网兜 Web</h2>
+          <p class="hint">网兜 Web 是网兜桌面客户端的网页版：登录后可在线管理云端备份中的网盘账号，浏览、下载、播放文件。</p>
+          <p class="hint">同账号的完整功能（虚拟盘映射、上传、跨盘同步等）请使用 Windows 客户端。</p>
+          <p class="hint"><a href="/" target="_blank" rel="noopener">返回官网</a> · <a href="agreement.html" target="_blank" rel="noopener">用户协议</a> · <a href="privacy.html" target="_blank" rel="noopener">隐私政策</a></p>
+        </div>
       </section>
     </main>
 
@@ -149,6 +178,6 @@
     <div id="modal-root"></div>
     <script src="assets/qrcode.js"></script>
     <script src="config.js"></script>
-    <script src="app.js?v=20261025g"></script>
+    <script src="app.js?v=20261026a"></script>
   </body>
 </html>

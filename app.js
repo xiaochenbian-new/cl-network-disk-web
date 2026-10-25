@@ -39,8 +39,8 @@
       quark: "夸克网盘",
       "115": "115 网盘",
     },
-    token: sessionStorage.getItem("wd_token") || "",
-    email: sessionStorage.getItem("wd_email") || "",
+    token: localStorage.getItem("wd_token") || "",
+    email: localStorage.getItem("wd_email") || "",
     accounts: [], // 解密后的网盘账号（含凭证，仅内存）
     spaceInfo: {}, // accountId -> {usedBytes,totalBytes}
     selectedId: null,
@@ -56,6 +56,7 @@
     scanAbort: false,
     playlist: [],
     plIndex: -1,
+    selKeys: new Set(),
   };
 
   function $(id) { return document.getElementById(id); }
@@ -233,6 +234,7 @@
     $("btn-logout").hidden = true;
     $("tab-files").hidden = true;
     $("tab-media").hidden = true;
+    $("btn-about").hidden = true;
   }
 
   function showApp() {
@@ -243,13 +245,14 @@
     $("btn-logout").hidden = false;
     $("tab-files").hidden = false;
     $("tab-media").hidden = false;
+    $("btn-about").hidden = false;
     renderAccounts();
     renderScanTargets();
   }
 
   function doLogout(expired) {
-    sessionStorage.removeItem("wd_token");
-    sessionStorage.removeItem("wd_email");
+    localStorage.removeItem("wd_token");
+    localStorage.removeItem("wd_email");
     state.token = "";
     state.email = "";
     state.accounts = [];
@@ -260,8 +263,8 @@
     state.spaceInfo = {};
     state.encKey = null;
     state.encSalt = null;
-    sessionStorage.removeItem("wd_enckey");
-    sessionStorage.removeItem("wd_ensalt");
+    localStorage.removeItem("wd_enckey");
+    localStorage.removeItem("wd_ensalt");
     stopPlayer();
     $("player").hidden = true;
     renderMedia();
@@ -293,8 +296,8 @@
       });
       state.token = r.token;
       state.email = r.email;
-      sessionStorage.setItem("wd_token", r.token);
-      sessionStorage.setItem("wd_email", r.email);
+      localStorage.setItem("wd_token", r.token);
+      localStorage.setItem("wd_email", r.email);
 
       var unlockMsg = "";
       console.log("[网兜Web] 登录成功；云端备份长度 =", (r.cloud || "").length, "；盐 =", r.encSalt);
@@ -307,8 +310,8 @@
           state.encKey = key;
           state.encSalt = r.encSalt;
           // 密钥存 sessionStorage：刷新本标签页可自动恢复，关标签页即失效，服务器不可见
-          sessionStorage.setItem("wd_enckey", bufToB64(bits));
-          sessionStorage.setItem("wd_ensalt", r.encSalt);
+          localStorage.setItem("wd_enckey", bufToB64(bits));
+          localStorage.setItem("wd_ensalt", r.encSalt);
           console.log("[网兜Web] 解密成功，账号数 =", state.accounts.length);
           unlockMsg = "已解密 " + state.accounts.length + " 个云端备份账号";
         } catch (err) {
@@ -370,8 +373,8 @@
       var r = await api("/api/user", { action: "register", email: email, password: password, code: code });
       state.token = r.token;
       state.email = r.email;
-      sessionStorage.setItem("wd_token", r.token);
-      sessionStorage.setItem("wd_email", r.email);
+      localStorage.setItem("wd_token", r.token);
+      localStorage.setItem("wd_email", r.email);
       state.accounts = [];
       showApp();
       setMsg($("app-msg"), "注册成功。请先在网兜客户端登录并开启「云端备份」，之后 Web 端即可浏览网盘", false);
@@ -886,6 +889,12 @@
 
       var tdCheck = document.createElement("td");
       tdCheck.className = "col-check";
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = state.selKeys.has(fileKey(f));
+      cb.addEventListener("click", function (e) { e.stopPropagation(); });
+      cb.addEventListener("change", function () { toggleSelect(f); });
+      tdCheck.appendChild(cb);
       tr.appendChild(tdCheck);
 
       var tdName = document.createElement("td");
@@ -1075,6 +1084,184 @@
     $("page-media").hidden = page !== "media";
     $("tab-files").className = "btn btn-sm topbar-btn" + (page === "files" ? " is-active" : "");
     $("tab-media").className = "btn btn-sm topbar-btn" + (page === "media" ? " is-active" : "");
+  }
+
+  /* ---------------- 账号检测 / 批量操作 / 文件夹选择 ---------------- */
+
+  async function checkAccounts() {
+    var btn = $("btn-check");
+    btn.disabled = true;
+    btn.textContent = "检测中…";
+    try {
+      for (var i = 0; i < state.accounts.length; i++) {
+        var acc = state.accounts[i];
+        if (!state.supported[acc.provider]) { acc._status = "unsupported"; continue; }
+        try {
+          await proxyFor(acc, "list", { parentFileId: "" });
+          acc._status = "online";
+        } catch (err) {
+          acc._status = "offline";
+        }
+        renderAccounts();
+      }
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "检测";
+    }
+  }
+
+  function updateBatchBar() {
+    var n = state.selKeys.size;
+    $("batch-bar").hidden = n === 0;
+    $("sel-count").textContent = String(n);
+    $("check-all").checked = state.files.length > 0 && state.files.every(function (f) { return state.selKeys.has(fileKey(f)); });
+  }
+
+  function toggleSelect(f) {
+    var k = fileKey(f);
+    if (state.selKeys.has(k)) state.selKeys.delete(k);
+    else state.selKeys.add(k);
+    updateBatchBar();
+    renderFiles();
+  }
+
+  function toggleSelectAll() {
+    var all = state.files.length > 0 && state.files.every(function (f) { return state.selKeys.has(fileKey(f)); });
+    state.selKeys = new Set();
+    if (!all) state.files.forEach(function (f) { state.selKeys.add(fileKey(f)); });
+    updateBatchBar();
+    renderFiles();
+  }
+
+  function selectedItems() {
+    return state.files.filter(function (f) { return state.selKeys.has(fileKey(f)); });
+  }
+
+  function pickFolder(title, onPick) {
+    var acc = accountById(state.selectedId);
+    if (!acc) return;
+    var mask = document.createElement("div");
+    mask.className = "modal-mask";
+    var box = document.createElement("div");
+    box.className = "modal modal-folder";
+    var h = document.createElement("h3");
+    h.textContent = title + "——选择目标文件夹";
+    box.appendChild(h);
+    var crumbsBox = document.createElement("p");
+    crumbsBox.className = "hint tight";
+    var list = document.createElement("div");
+    list.className = "folder-list";
+    var cur = "";
+    var stack = [];
+    function loadDir(dir) {
+      list.textContent = "加载中…";
+      proxyFor(acc, "list", { parentFileId: dir })
+        .then(function (r) {
+          crumbsBox.textContent = "位置：" + (dir === "" ? "根目录" : dir);
+          list.textContent = "";
+          var folders = (r.items || []).filter(function (f) { return f.isFolder; });
+          if (dir !== "") {
+            var up = document.createElement("div");
+            up.className = "folder-item is-up";
+            up.textContent = "↩ 上一级";
+            up.addEventListener("click", function () {
+              cur = stack.pop() || "";
+              loadDir(cur);
+            });
+            list.appendChild(up);
+          }
+          if (!folders.length) {
+            var empty = document.createElement("div");
+            empty.className = "folder-item is-empty";
+            empty.textContent = "（无子文件夹）";
+            list.appendChild(empty);
+          }
+          folders.forEach(function (f2) {
+            var row = document.createElement("div");
+            row.className = "folder-item";
+            row.textContent = "📁 " + f2.filename;
+            row.addEventListener("click", function () {
+              stack.push(dir);
+              cur = f2.fileId;
+              loadDir(cur);
+            });
+            list.appendChild(row);
+          });
+        })
+        .catch(function (err) {
+          list.textContent = err instanceof Error ? err.message : String(err);
+        });
+    }
+    loadDir("");
+    var actions = document.createElement("div");
+    actions.className = "modal-actions";
+    var cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.className = "btn";
+    cancel.textContent = "取消";
+    cancel.addEventListener("click", function () { mask.remove(); });
+    var ok = document.createElement("button");
+    ok.type = "button";
+    ok.className = "btn btn-primary";
+    ok.textContent = "确定";
+    ok.addEventListener("click", function () {
+      mask.remove();
+      onPick(cur);
+    });
+    actions.appendChild(cancel);
+    actions.appendChild(ok);
+    box.appendChild(actions);
+    box.appendChild(list);
+    mask.appendChild(box);
+    $("modal-root").appendChild(mask);
+  }
+
+  function batchTransfer(kind) {
+    var items = selectedItems();
+    if (!items.length) return;
+    pickFolder(kind === "move" ? "移动" : "复制", function (target) {
+      var done = 0, fail = 0;
+      var chain = Promise.resolve();
+      items.forEach(function (it) {
+        chain = chain.then(function () {
+          return proxyFor(accountById(it.accountId || state.selectedId), kind, {
+            items: [it], targetParentId: target,
+          }).then(function () { done += 1; }, function () { fail += 1; });
+        });
+      });
+      chain.then(function () {
+        state.selKeys = new Set();
+        updateBatchBar();
+        setMsg($("app-msg"), (kind === "move" ? "移动" : "复制") + "完成：成功 " + done + " 个" + (fail ? "，失败 " + fail + " 个" : ""), fail > 0);
+        loadFiles(currentParentId());
+      });
+    });
+  }
+
+  function batchDelete() {
+    var items = selectedItems();
+    if (!items.length) return;
+    if (!window.confirm("确认删除选中的 " + items.length + " 项？（进入网盘回收站）")) return;
+    var chain = Promise.resolve();
+    var done = 0, fail = 0;
+    items.forEach(function (it) {
+      chain = chain.then(function () {
+        return proxyFor(accountById(it.accountId || state.selectedId), "delete", { items: [it] })
+          .then(function () { done += 1; }, function () { fail += 1; });
+      });
+    });
+    chain.then(function () {
+      state.selKeys = new Set();
+      updateBatchBar();
+      setMsg($("app-msg"), "删除完成：成功 " + done + " 个" + (fail ? "，失败 " + fail + " 个" : ""), fail > 0);
+      loadFiles(currentParentId());
+    });
+  }
+
+  function batchRename() {
+    var items = selectedItems();
+    if (items.length !== 1) { setMsg($("app-msg"), "重命名仅支持单个选中项", true); return; }
+    renameFile(items[0]);
   }
 
   /* ---------------- 音乐视频：扫描 ---------------- */
@@ -1387,11 +1574,8 @@
   (function initSideResize() {
     var saved = Number(localStorage.getItem("wd_side_w"));
     if (saved >= 200 && saved <= 480) $("view-app").querySelector(".side").style.flex = "0 0 " + saved + "px";
-    var resizer = document.createElement("div");
-    resizer.className = "side-resizer";
-    resizer.title = "拖动调整宽度";
+    var resizer = $("side-resizer");
     var side = $("view-app").querySelector(".side");
-    side.parentNode.insertBefore(resizer, side.nextSibling);
     var dragging = false;
     resizer.addEventListener("mousedown", function (e) {
       dragging = true;
@@ -1416,6 +1600,17 @@
   })();
   $("btn-refresh").addEventListener("click", function () { loadFiles(currentParentId()); });
   $("btn-mkdir").addEventListener("click", mkdir);
+  $("btn-check").addEventListener("click", checkAccounts);
+  $("check-all").addEventListener("change", toggleSelectAll);
+  $("btn-batch-dl").addEventListener("click", function () {
+    selectedItems().forEach(function (f) { downloadFile(f); });
+  });
+  $("btn-batch-del").addEventListener("click", batchDelete);
+  $("btn-batch-move").addEventListener("click", function () { batchTransfer("move"); });
+  $("btn-batch-copy").addEventListener("click", function () { batchTransfer("copy"); });
+  $("btn-batch-rename").addEventListener("click", batchRename);
+  $("btn-sel-all").addEventListener("click", toggleSelectAll);
+  $("btn-about").addEventListener("click", function () { setPage("about"); });
   $("btn-logout").addEventListener("click", function () { doLogout(false); });
 
   $("tab-files").addEventListener("click", function () { setPage("files"); });
@@ -1481,14 +1676,14 @@
 
   // 刷新自动恢复：token + sessionStorage 里的派生密钥都还在时，直接解密进入
   (async function tryRestore() {
-    var storedKey = sessionStorage.getItem("wd_enckey");
-    var storedSalt = sessionStorage.getItem("wd_ensalt");
+    var storedKey = localStorage.getItem("wd_enckey");
+    var storedSalt = localStorage.getItem("wd_ensalt");
     if (!state.token || !state.email || !storedKey || !storedSalt) { showLogin(); return; }
     showLogin();
     setMsg($("login-msg"), "正在恢复会话…", false);
     try {
       var cloud = await api("/api/user", { action: "session", token: state.token }, state.token);
-      if (!cloud.cloud) { sessionStorage.removeItem("wd_enckey"); showLogin(); setMsg($("login-msg"), "云端暂无备份", false); return; }
+      if (!cloud.cloud) { localStorage.removeItem("wd_enckey"); showLogin(); setMsg($("login-msg"), "云端暂无备份", false); return; }
       var key = await crypto.subtle.importKey(
         "raw",
         b64ToBuf(storedKey),
@@ -1503,7 +1698,7 @@
       showApp();
       setMsg($("app-msg"), "已恢复 " + state.accounts.length + " 个云端备份账号", false);
     } catch (err) {
-      sessionStorage.removeItem("wd_enckey");
+      localStorage.removeItem("wd_enckey");
       showLogin();
       setMsg($("login-msg"), "会话恢复失败，请重新登录：" + (err instanceof Error ? err.message : String(err)), true);
     }
