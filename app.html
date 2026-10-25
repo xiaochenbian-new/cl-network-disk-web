@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>网兜 Web 版</title>
+    <link rel="icon" href="assets/app-icon.png" type="image/png" />
+    <link rel="stylesheet" href="app.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/"><img src="assets/app-icon.png" alt="网兜" width="26" height="26" /><span>网兜 Web</span></a>
+      <span id="user-chip" class="user-chip" hidden></span>
+      <button id="btn-logout" class="btn btn-ghost btn-sm" hidden>退出登录</button>
+    </header>
+
+    <!-- 登录视图 -->
+    <main id="view-login" class="login-view">
+      <div class="login-card">
+        <h1>登录网兜 Web</h1>
+        <p class="hint">使用网兜账号（邮箱 + 密码）登录。登录后将在本机解密云端备份的网盘账号，凭证不经服务器存储。</p>
+        <label>邮箱<input id="login-email" type="email" placeholder="you@example.com" autocomplete="username" /></label>
+        <label>密码<input id="login-password" type="password" placeholder="登录密码" autocomplete="current-password" /></label>
+        <p id="login-msg" class="msg"></p>
+        <button id="btn-login" class="btn btn-primary btn-block">登录</button>
+        <p class="hint tight">
+          还没有云端数据？先在
+          <a href="/" target="_blank" rel="noopener">网兜客户端</a>
+          注册登录并开启「云端备份网盘账号」。
+        </p>
+      </div>
+    </main>
+
+    <!-- 主视图 -->
+    <main id="view-app" class="app-view" hidden>
+      <aside class="side">
+        <div class="side-head">网盘账号</div>
+        <ul id="account-list" class="account-list"></ul>
+        <p class="hint tight" id="account-hint"></p>
+      </aside>
+      <section class="main">
+        <div class="toolbar">
+          <div id="crumbs" class="crumbs"></div>
+          <div class="toolbar-actions">
+            <button id="btn-refresh" class="btn btn-sm">刷新</button>
+            <button id="btn-mkdir" class="btn btn-sm">新建文件夹</button>
+          </div>
+        </div>
+        <p id="app-msg" class="msg"></p>
+        <div class="table-wrap">
+          <table class="file-table">
+            <thead>
+              <tr><th class="col-check"></th><th>名称</th><th class="col-size">大小</th><th class="col-time">修改时间</th><th class="col-ops">操作</th></tr>
+            </thead>
+            <tbody id="file-tbody">
+              <tr><td colspan="5" class="empty-cell">选择左侧账号浏览文件</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <div id="modal-root"></div>
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
