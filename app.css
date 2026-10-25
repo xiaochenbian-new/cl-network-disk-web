@@ -211,6 +211,19 @@ a { color: var(--primary); }
 .account-list li.is-unsupported { color: var(--muted); cursor: default; background: #f7f8fa; }
 .account-list li.is-unsupported:hover { border-color: transparent; }
 .acc-line1 { display: flex; align-items: center; gap: 0.35rem; min-width: 0; }
+.acc-icon { width: 18px; height: 18px; flex: 0 0 18px; border-radius: 4px; }
+.account-banner {
+  border: 1px solid #ffd6d0;
+  background: #fff2ef;
+  color: var(--danger);
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+  word-break: break-all;
+}
+.supported-chip { display: inline-flex; align-items: center; gap: 4px; }
+.supported-chip img { width: 15px; height: 15px; border-radius: 3px; }
 .provider-tag {
   font-size: 0.72rem;
   background: var(--primary-soft);

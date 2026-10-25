@@ -1,0 +1,11 @@
+
+<a id="a-link" href="https://g.alicdn.com/sd/punish/waf_block.html?wh_ttid=pc&qrcode=_pXzPPAxg-9G4H4J723gvQ|aXcpig|L9C1FA_0|AAAATg&uuid=fe95f33cf03183ef46e07e09ef6de0bd&origin=https%3A%2F%2Fvt.quark.cn%3A443"></a>
+<script>
+  document.getElementById("a-link").click();
+
+  window._config_ = {
+    "action": "block",
+    "url": "https://g.alicdn.com/sd/punish/block_h5.html?wh_ttid=pc&qrcode=_pXzPPAxg-9G4H4J723gvQ|aXcpig|L9C1FA_0|AAAATg&uuid=fe95f33cf03183ef46e07e09ef6de0bd&origin=https%3A%2F%2Fvt.quark.cn%3A443"
+  };
+</script>
+<!--rgv587_flag:sm-->

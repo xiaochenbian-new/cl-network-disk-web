@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0" />
+<link href="https://images.bakstotre.com/assets/share/404a.css" rel="stylesheet" type="text/css">
+<title>404</title>
+</head>
+<body>
+<div class="box">
+<div class="off"><div class="off0"><div class="off1"></div></div><div id="filename"></div><div class="info" id="info"></div><br></div>
+<div class="d_pcdiv" id="d_pcdiv"></div>
+</div>
+<script type="text/javascript" src="https://images.bakstotre.com/assets/share/404a.js"></script>
+<div style="display:none">112.96.230.81</div>
+</body>
+</html>

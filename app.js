@@ -10,6 +10,16 @@
   var KDF_ITERATIONS = 120000;
   var publicCfg = null; // { turnstileSiteKey, turnstileRequired }
 
+  var PROVIDER_ICONS = {
+    "123": "assets/providers/p-123.png",
+    baidu: "assets/providers/p-baidu.png",
+    aliyun: "assets/providers/p-aliyun.svg",
+    lanzou: "assets/providers/p-lanzou.svg",
+    xiaomi: "assets/providers/p-xiaomi.png",
+    quark: "assets/providers/p-quark.png",
+    "115": "assets/providers/p-115.svg",
+  };
+
   var AUDIO_EXTS = [".mp3", ".flac", ".m4a", ".aac", ".wav", ".ogg", ".wma"];
   var VIDEO_EXTS = [".mp4", ".mkv", ".mov", ".webm", ".avi"];
   var SCAN_MAX_FOLDERS = 150;
@@ -267,6 +277,7 @@
       sessionStorage.setItem("wd_email", r.email);
 
       var unlockMsg = "";
+      console.log("[网兜Web] 登录成功；云端备份长度 =", (r.cloud || "").length, "；盐 =", r.encSalt);
       if (r.cloud && r.encSalt) {
         try {
           var key = await deriveKey(password, r.encSalt);
@@ -274,8 +285,10 @@
           state.accounts = payload.accounts || [];
           state.encKey = key;
           state.encSalt = r.encSalt;
+          console.log("[网兜Web] 解密成功，账号数 =", state.accounts.length);
           unlockMsg = "已解密 " + state.accounts.length + " 个云端备份账号";
         } catch (err) {
+          console.error("[网兜Web] 解密失败", err);
           unlockMsg = "云端备份解密失败：" + (err instanceof Error ? err.message : String(err));
         }
       } else {
@@ -283,6 +296,13 @@
       }
       showApp();
       setMsg($("app-msg"), unlockMsg, !state.accounts.length);
+      // 侧栏也放一份错误横幅，避免被忽略
+      var banner = $("account-banner");
+      if (banner) {
+        banner.hidden = !unlockMsg || state.accounts.length > 0;
+        banner.textContent = unlockMsg || "";
+        banner.className = "account-banner" + (state.accounts.length ? "" : " is-error");
+      }
     } catch (err) {
       setMsg(msgEl, err instanceof Error ? err.message : String(err), true);
     } finally {
@@ -542,6 +562,7 @@
     var ul = $("account-list");
     ul.textContent = "";
     var unsupported = 0;
+    try {
     state.accounts.forEach(function (acc) {
       var li = document.createElement("li");
       var supported = !!state.supported[acc.provider];
@@ -556,6 +577,11 @@
 
       var line1 = document.createElement("div");
       line1.className = "acc-line1";
+      var icon = document.createElement("img");
+      icon.className = "acc-icon";
+      icon.src = PROVIDER_ICONS[acc.provider] || "";
+      icon.alt = "";
+      line1.appendChild(icon);
       var tag = document.createElement("span");
       tag.className = "provider-tag";
       tag.textContent = state.providerNames[acc.provider] || acc.provider;
@@ -596,9 +622,14 @@
 
       ul.appendChild(li);
     });
+    } catch (err) {
+      // 渲染异常必须可见：之前异常被吞导致列表空白且无提示
+      console.error("[网兜Web] 账号渲染失败", err);
+      $("account-hint").textContent = "账号渲染失败：" + (err instanceof Error ? err.message : String(err));
+    }
     $("account-hint").textContent = unsupported
       ? unsupported + " 个账号的网盘暂不支持 Web 端操作，请在客户端使用"
-      : "";
+      : $("account-hint").textContent;
   }
 
   async function loadSpace(acc) {
@@ -1136,7 +1167,11 @@
     providers.forEach(function (p) {
       var span = document.createElement("span");
       span.className = "supported-chip" + (state.supported[p.id] ? " is-web" : "");
-      span.textContent = p.name + (state.supported[p.id] ? " Web" : "");
+      var img = document.createElement("img");
+      img.src = PROVIDER_ICONS[p.id] || "";
+      img.alt = "";
+      span.appendChild(img);
+      span.appendChild(document.createTextNode(p.name + (state.supported[p.id] ? " Web" : "")));
       grid.appendChild(span);
     });
   })();
