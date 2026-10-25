@@ -17,6 +17,8 @@
   var state = {
     authMode: "login", // login | register
     captchaId: "",
+    encKey: null, // 派生密钥（内存），用于把账号变更重新加密上传云端备份
+    encSalt: null,
     token: sessionStorage.getItem("wd_token") || "",
     email: sessionStorage.getItem("wd_email") || "",
     accounts: [], // 解密后的网盘账号（含凭证，仅内存）
@@ -224,6 +226,8 @@
     state.files = [];
     state.mediaItems = [];
     state.spaceInfo = {};
+    state.encKey = null;
+    state.encSalt = null;
     stopPlayer();
     $("player").hidden = true;
     renderMedia();
@@ -264,6 +268,8 @@
           var key = await deriveKey(password, r.encSalt);
           var payload = await decryptBlob(r.cloud, key);
           state.accounts = payload.accounts || [];
+          state.encKey = key;
+          state.encSalt = r.encSalt;
           unlockMsg = "已解密 " + state.accounts.length + " 个云端备份账号";
         } catch (err) {
           unlockMsg = "云端备份解密失败：" + (err instanceof Error ? err.message : String(err));
@@ -354,6 +360,176 @@
       sendBtn.disabled = false;
       sendBtn.textContent = "获取验证码";
     }
+  }
+
+  /* ---------------- 添加账号（保存到云端备份，应用端同步可见） ---------------- */
+
+  var ADDABLE = [
+    { provider: "123", label: "123 网盘（账号密码）", fields: [
+      { key: "username", label: "账号（手机号/邮箱）", autofocus: true },
+      { key: "password", label: "密码", type: "password" },
+    ] },
+    { provider: "quark", label: "夸克网盘（粘贴 Cookie）", fields: [
+      { key: "cookie", label: "夸克 Cookie（浏览器 DevTools 复制整段）", type: "textarea", autofocus: true },
+    ] },
+    { provider: "115", label: "115 网盘（粘贴 Cookie）", fields: [
+      { key: "cookie", label: "115 Cookie", type: "textarea", autofocus: true },
+    ] },
+    { provider: "xiaomi", label: "小米云盘（粘贴 Cookie）", fields: [
+      { key: "cookie", label: "小米 Cookie", type: "textarea", autofocus: true },
+    ] },
+    { provider: "lanzou", label: "蓝奏云（粘贴 Cookie）", fields: [
+      { key: "cookie", label: "蓝奏云 Cookie", type: "textarea", autofocus: true },
+    ] },
+  ];
+
+  function bufToB64(buf) {
+    var bytes = new Uint8Array(buf);
+    var s = "";
+    for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return btoa(s);
+  }
+
+  function saveAccountsToCloud() {
+    if (!state.encKey || !state.encSalt) return Promise.resolve();
+    var payload = { v: 1, savedAt: Date.now(), accounts: state.accounts };
+    var iv = crypto.getRandomValues(new Uint8Array(12));
+    return crypto.subtle.encrypt(
+      { name: "AES-GCM", iv: iv },
+      state.encKey,
+      new TextEncoder().encode(JSON.stringify(payload))
+    ).then(function (ctBuf) {
+      // 与客户端 blob 布局一致：wd1:base64(iv|tag|ct)
+      var ct = new Uint8Array(ctBuf);
+      var tag = ct.slice(ct.length - 16);
+      var body = ct.slice(0, ct.length - 16);
+      var out = new Uint8Array(12 + 16 + body.length);
+      out.set(iv, 0);
+      out.set(tag, 12);
+      out.set(body, 28);
+      var blob = "wd1:" + bufToB64(out.buffer);
+      return api("/api/user", { action: "sync", blob: blob, encSalt: state.encSalt }, state.token);
+    });
+  }
+
+  function openAddAccount() {
+    if (!state.encKey) {
+      setMsg($("app-msg"), "添加账号需要先登录并解锁云端备份（刷新后请重新登录）", true);
+      return;
+    }
+    var fieldBox = null;
+    var fields = [];
+    var mask = document.createElement("div");
+    mask.className = "modal-mask";
+    var box = document.createElement("div");
+    box.className = "modal";
+    var h = document.createElement("h3");
+    h.textContent = "添加网盘账号";
+    box.appendChild(h);
+    var hint = document.createElement("p");
+    hint.className = "hint tight";
+    hint.textContent = "添加后加密同步到云端备份，客户端/Web 端均可见。百度/阿里需 OAuth 授权，请在客户端添加。";
+    box.appendChild(hint);
+    var selLabel = document.createElement("label");
+    selLabel.textContent = "选择网盘";
+    var providerSel = document.createElement("select");
+    ADDABLE.forEach(function (a, i) {
+      var opt = document.createElement("option");
+      opt.value = String(i);
+      opt.textContent = a.label;
+      providerSel.appendChild(opt);
+    });
+    selLabel.appendChild(providerSel);
+    box.appendChild(selLabel);
+    fieldBox = document.createElement("div");
+    box.appendChild(fieldBox);
+    var msgP = document.createElement("p");
+    msgP.className = "msg";
+    box.appendChild(msgP);
+
+    function renderFields(def) {
+      fieldBox.textContent = "";
+      fields = def.fields;
+      fields.forEach(function (f) {
+        var label = document.createElement("label");
+        label.textContent = f.label;
+        var input = document.createElement(f.type === "textarea" ? "textarea" : "input");
+        if (f.type === "textarea") {
+          input.rows = 3;
+          input.style.width = "100%";
+          input.style.boxSizing = "border-box";
+        } else {
+          input.type = f.type || "text";
+        }
+        if (f.autofocus) input.autofocus = true;
+        input.dataset.key = f.key;
+        label.appendChild(input);
+        fieldBox.appendChild(label);
+      });
+    }
+    providerSel.addEventListener("change", function () {
+      renderFields(ADDABLE[Number(providerSel.value)]);
+    });
+    renderFields(ADDABLE[0]);
+
+    var actions = document.createElement("div");
+    actions.className = "modal-actions";
+    var cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.className = "btn";
+    cancel.textContent = "取消";
+    cancel.addEventListener("click", function () { mask.remove(); });
+    var ok = document.createElement("button");
+    ok.type = "button";
+    ok.className = "btn btn-primary";
+    ok.textContent = "添加";
+    ok.addEventListener("click", function () {
+      var def = ADDABLE[Number(providerSel.value)];
+      var vals = {};
+      fields.forEach(function (f) {
+        var el = fieldBox.querySelector('[data-key="' + f.key + '"]');
+        vals[f.key] = el ? el.value.trim() : "";
+      });
+      ok.disabled = true;
+      msgP.textContent = "正在添加…";
+      var acc = {
+        id: "web-" + crypto.randomUUID(),
+        provider: def.provider,
+        label: def.provider === "123" ? vals.username : state.providerNames[def.provider],
+        username: def.provider === "123" ? vals.username : "",
+        status: "online",
+        defaultParentId: "",
+        defaultParentPath: "/",
+      };
+      var authReady;
+      if (def.provider === "123") {
+        if (!vals.username || !vals.password) { msgP.textContent = "请输入账号和密码"; ok.disabled = false; return; }
+        acc.label = vals.username;
+        authReady = proxyFor({ provider: "123", accessToken: "" }, "login", vals).then(function (r) {
+          acc.accessToken = r.accessToken;
+        });
+      } else {
+        if (!vals.cookie) { msgP.textContent = "请粘贴 Cookie"; ok.disabled = false; return; }
+        acc.cookie = vals.cookie;
+        authReady = Promise.resolve();
+      }
+      authReady.then(function () {
+        state.accounts.push(acc);
+        return saveAccountsToCloud();
+      }).then(function () {
+        mask.remove();
+        renderAccounts();
+        setMsg($("app-msg"), "已添加「" + acc.label + "」并加密同步到云端备份", false);
+      }).catch(function (err) {
+        msgP.textContent = err instanceof Error ? err.message : String(err);
+        ok.disabled = false;
+      });
+    });
+    actions.appendChild(cancel);
+    actions.appendChild(ok);
+    box.appendChild(actions);
+    mask.appendChild(box);
+    $("modal-root").appendChild(mask);
   }
 
   /* ---------------- 账号列表（应用端同款卡片） ---------------- */
@@ -909,6 +1085,7 @@
   });
   loadCaptcha();
 
+  $("btn-add-account").addEventListener("click", openAddAccount);
   $("btn-refresh").addEventListener("click", function () { loadFiles(currentParentId()); });
   $("btn-mkdir").addEventListener("click", mkdir);
   $("btn-logout").addEventListener("click", function () { doLogout(false); });

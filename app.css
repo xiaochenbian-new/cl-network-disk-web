@@ -131,7 +131,24 @@ a { color: var(--primary); }
   padding: 0.8rem;
   overflow-y: auto;
 }
-.side-head { font-weight: 700; margin-bottom: 0.6rem; }
+.side-head {
+  font-weight: 700;
+  margin-bottom: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.side-add {
+  border: none;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 600;
+  padding: 2px 4px;
+  border-radius: 6px;
+}
+.side-add:hover { background: var(--primary-soft); }
 .side-head-hint { display: block; font-size: 0.74rem; color: var(--muted); font-weight: 400; margin-top: 2px; }
 .account-list { list-style: none; margin: 0; padding: 0; }
 .account-list li {
@@ -183,7 +200,7 @@ a { color: var(--primary); }
 }
 .acc-bar-fill { height: 100%; background: var(--primary); border-radius: 3px; }
 .main { flex: 1; min-width: 0; padding: 0.8rem 1.1rem; }
-.page { max-width: 1200px; }
+.page { width: 100%; }
 
 /* 工具栏 */
 .toolbar { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }

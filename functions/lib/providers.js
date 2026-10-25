@@ -119,6 +119,38 @@ async function p123Request(auth, method, url, body) {
   return json.data || json;
 }
 
+async function p123Login(params) {
+  const username = String(params.username || "").trim();
+  const password = String(params.password || "");
+  if (!username || !password) throw new Error("请输入 123 网盘账号和密码");
+  const body = username.includes("@")
+    ? { mail: username, password, type: 2 }
+    : { passport: username, password, type: 1, remember: true };
+  const res = await fetch("https://login.123pan.com/api/user/sign_in", {
+    method: "POST",
+    headers: {
+      origin: "https://yun.123pan.com",
+      referer: "https://yun.123pan.com/",
+      platform: "web",
+      "app-version": "3",
+      "content-type": "application/json",
+      "user-agent": PAN_UA,
+    },
+    body: JSON.stringify(body),
+  });
+  const text = await res.text();
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    throw new Error("123 登录响应异常");
+  }
+  if ((json.code !== 200 && json.code !== 0) || !json.data?.token) {
+    throw new Error(json.message || "123 登录失败，请检查账号密码");
+  }
+  return { accessToken: json.data.token };
+}
+
 async function p123List(auth, parentFileId) {
   const items = [];
   let next = "0";
@@ -493,6 +525,8 @@ export async function proxyAction(provider, action, auth, params) {
       return await aliyunDownload(auth, params.item);
     case "123:space":
       return await p123Space(auth);
+    case "123:login":
+      return await p123Login(params);
     case "baidu:space":
       return await baiduSpace(auth);
     case "aliyun:space":
