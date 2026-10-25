@@ -21,9 +21,6 @@
       ? "https://main.cl-license.pages.dev"
       : "https://license.wangdou.win",
     appId: "wangdou",
-    downloads: [],
-    githubUrl: "https://github.com/xiaochenbian-new/cl-network-disk-web",
-    giteeUrl: "https://gitee.com/xiaochenbian/cl-network-disk-web",
-    cloudflareUrl: "https://cl-network-disk-web.pages.dev/"
+    downloads: []
   };
 })();

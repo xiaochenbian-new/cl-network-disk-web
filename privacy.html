@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="网兜隐私政策：凭证仅存本机、核销服务收到的匿名信息、WebDAV 端到端加密备份说明。" />
+    <title>隐私政策 - 网兜</title>
+    <link rel="icon" href="assets/app-icon.png" type="image/png" />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .legal-main { max-width: 780px; margin: 0 auto; padding: 48px 20px 64px; }
+      .legal-main h1 { font-size: 1.7rem; margin-bottom: 4px; }
+      .legal-meta { color: #6b7a77; font-size: 0.9rem; margin-bottom: 28px; }
+      .legal-body p { margin: 0 0 10px; line-height: 1.85; }
+      .legal-body h2 { font-size: 1.12rem; margin: 26px 0 10px; }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/"><img src="assets/app-icon.png" alt="网兜" width="30" height="30" /><span>网兜</span></a>
+      <nav class="nav" aria-label="导航">
+        <a href="/">首页</a>
+        <a href="/#download">下载</a>
+      </nav>
+    </header>
+    <main class="legal-main">
+      <h1>网兜（Wangdou）隐私政策</h1><p class="legal-meta">生效日期：2026年10月14日</p><p>网兜（Wangdou）隐私政策</p>
+      <p>生效日期：2026年10月14日</p>
+      <p>本政策说明网兜（下称"本软件"）如何处理你的信息。开发者非常重视隐私：本软件的核心设计是你的网盘凭证与文件数据不经过开发者的任何服务器。</p>
+      <h2>一、存储在本机的信息</h2>
+      <div class="legal-body">
+      <p>1. 你登录的网盘账号凭证（Cookie、Token、密码等）仅保存在本机（%LOCALAPPDATA%\\Wangdou 目录），使用 Windows 系统凭据保护（DPAPI）加密存储，不会上传到开发者的服务器。</p>
+      <p>2. 应用设置、传输历史记录等同样仅保存在本机。卸载软件或删除上述目录即可彻底清除。</p>
+      </div>
+      <h2>二、开发者能收到的信息</h2>
+      <div class="legal-body">
+      <p>1. 设备标识：激活或验证 VIP 时，本软件向核销服务（license.wangdou.win，基于 Cloudflare）发送一个由本机主机名与用户名哈希生成的匿名设备 ID，用于激活码与设备的绑定校验。该 ID 不含姓名、手机号等个人身份信息，也无法反推出你的网盘账号。</p>
+      <p>2. 核销记录：激活码、套餐与设备绑定关系、时间戳，用于提供 VIP 服务。</p>
+      <p>3. 版本检查：检查更新时向核销服务 / GitHub 请求最新版本号。请求中不附带个人数据。</p>
+      </div>
+      <h2>三、可选的 WebDAV 备份</h2>
+      <div class="legal-body">
+      <p>1. 如你启用 WebDAV 账号同步，备份内容（含网盘凭证）会先经 AES-256-GCM 端到端加密，再上传到你指定的 WebDAV 网盘（如坚果云、123 云盘）。</p>
+      <p>2. 加密密钥由你设置的备份密码派生，仅保存在本机；WebDAV 服务器与开发者均无法读取备份内容。请妥善保管备份密码，丢失后备份将无法解密。</p>
+      </div>
+      <h2>四、与第三方的通信</h2>
+      <div class="legal-body">
+      <p>1. 文件操作（浏览、上传、下载、分享）直接发生在你的电脑与对应网盘官方服务器之间，开发者不经手、不中转、不存储你的文件内容。</p>
+      <p>2. 更新安装包来自 GitHub Releases（xiaochenbian-new/wangdou-releases）。</p>
+      <p>3. 各第三方服务有自己的隐私政策，本政策不适用于它们。</p>
+      </div>
+      <h2>五、信息的使用与共享</h2>
+      <div class="legal-body">
+      <p>1. 上述信息仅用于提供与维护 VIP 激活服务、防止激活码滥用。</p>
+      <p>2. 开发者不会出售、出租你的个人信息；除法律法规要求或司法机关依法定程序要求外，不会向第三方提供。</p>
+      </div>
+      <h2>六、未成年人</h2>
+      <div class="legal-body">
+      <p>本软件及 VIP 服务面向普通用户，未成年人应在监护人指导下使用并在监护人同意后购买。</p>
+      </div>
+      <h2>七、政策更新</h2>
+      <div class="legal-body">
+      <p>政策更新后会在应用内提示。继续使用即视为接受更新后的内容。</p>
+      </div>
+      <h2>八、联系方式</h2>
+      <div class="legal-body">
+      <p>微信：xiaochenbian21（官网 https://wangdou.win ）</p>
+      </div>
+    </main>
+    <footer class="site-footer">
+      <p class="footer-meta">© <span id="year"></span> 网兜</p>
+    </footer>
+    <script>document.getElementById("year").textContent = String(new Date().getFullYear());</script>
+  </body>
+</html>
