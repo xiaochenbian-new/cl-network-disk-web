@@ -204,6 +204,8 @@
     $("view-app").hidden = true;
     $("user-chip").hidden = true;
     $("btn-logout").hidden = true;
+    $("tab-files").hidden = true;
+    $("tab-media").hidden = true;
   }
 
   function showApp() {
@@ -212,6 +214,8 @@
     $("user-chip").hidden = false;
     $("user-chip").textContent = state.email;
     $("btn-logout").hidden = false;
+    $("tab-files").hidden = false;
+    $("tab-media").hidden = false;
     renderAccounts();
   }
 
@@ -1116,6 +1120,26 @@
     if (audio.duration > 0) audio.currentTime = (Number(e.target.value) / 1000) * audio.duration;
   });
   audio.addEventListener("ended", plNext);
+
+  // 侧栏底部:支持的网盘(与客户端一致的 7 家,Web 可操作的标绿)
+  (function renderSupportedGrid() {
+    var grid = $("supported-grid");
+    var providers = [
+      { id: "123", name: "123 网盘" },
+      { id: "baidu", name: "百度网盘" },
+      { id: "aliyun", name: "阿里云盘" },
+      { id: "quark", name: "夸克网盘" },
+      { id: "115", name: "115 网盘" },
+      { id: "xiaomi", name: "小米云盘" },
+      { id: "lanzou", name: "蓝奏云" },
+    ];
+    providers.forEach(function (p) {
+      var span = document.createElement("span");
+      span.className = "supported-chip" + (state.supported[p.id] ? " is-web" : "");
+      span.textContent = p.name + (state.supported[p.id] ? " Web" : "");
+      grid.appendChild(span);
+    });
+  })();
 
   // 已有会话 token：刷新后凭证不在内存，回到登录视图要求重新输密码解密
   if (state.token && state.email) {

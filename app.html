@@ -6,15 +6,15 @@
     <meta name="robots" content="noindex" />
     <title>网兜 Web 版</title>
     <link rel="icon" href="assets/app-icon.png" type="image/png" />
-    <link rel="stylesheet" href="app.css" />
+    <link rel="stylesheet" href="app.css?v=20261025b" />
   </head>
   <body>
     <header class="topbar">
       <a class="brand" href="/"><img src="assets/app-icon.png" alt="网兜" width="26" height="26" /><span>网兜 Web</span></a>
       <span id="user-chip" class="user-chip" hidden></span>
       <div class="topbar-actions">
-        <button id="tab-files" class="btn btn-sm topbar-btn is-active">文件管理</button>
-        <button id="tab-media" class="btn btn-sm topbar-btn">音乐视频</button>
+        <button id="tab-files" class="btn btn-sm topbar-btn is-active" hidden>文件管理</button>
+        <button id="tab-media" class="btn btn-sm topbar-btn" hidden>音乐视频</button>
         <button id="btn-logout" class="btn btn-sm topbar-btn" hidden>退出登录</button>
       </div>
     </header>
@@ -57,6 +57,11 @@
         </div>
         <ul id="account-list" class="account-list"></ul>
         <p class="hint tight" id="account-hint"></p>
+        <div class="supported-block">
+          <div class="supported-title">支持的网盘</div>
+          <div class="supported-grid" id="supported-grid"></div>
+          <p class="hint tight">标注 Web 的可直接在网页操作；其余添加后可在客户端使用</p>
+        </div>
       </aside>
 
       <section class="main">
@@ -132,6 +137,6 @@
 
     <div id="modal-root"></div>
     <script src="config.js"></script>
-    <script src="app.js"></script>
+    <script src="app.js?v=20261025b"></script>
   </body>
 </html>

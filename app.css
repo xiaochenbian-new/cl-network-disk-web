@@ -121,6 +121,50 @@ a { color: var(--primary); }
 .turnstile-row { margin: 0.6rem 0 0; min-height: 70px; }
 .linklike { border: none; background: transparent; color: var(--primary); cursor: pointer; padding: 0.4rem 0 0; }
 
+#modal-root .modal textarea {
+  width: 100%;
+  min-height: 84px;
+  margin-top: 0.2rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  resize: vertical;
+}
+#modal-root .modal { min-width: 380px; max-width: 480px; }
+#modal-root .modal select {
+  width: 100%;
+  margin-top: 0.2rem;
+  padding: 0.45rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: var(--panel);
+}
+
+.supported-block {
+  margin-top: 1rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--line);
+}
+.supported-title { font-weight: 700; font-size: 0.86rem; margin-bottom: 0.45rem; }
+.supported-grid { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.supported-chip {
+  font-size: 0.75rem;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.12rem 0.5rem;
+  background: #fbfcfe;
+}
+.supported-chip.is-web {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  font-weight: 600;
+}
+
 /* 主布局 */
 .app-view { display: flex; min-height: calc(100vh - 54px); }
 .side {
