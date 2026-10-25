@@ -6,7 +6,7 @@
     <meta name="robots" content="noindex" />
     <title>网兜 Web 版</title>
     <link rel="icon" href="assets/app-icon.png" type="image/png" />
-    <link rel="stylesheet" href="app.css?v=20261025f" />
+    <link rel="stylesheet" href="app.css?v=20261025g" />
   </head>
   <body>
     <header class="topbar">
@@ -58,10 +58,32 @@
         <div id="account-banner" class="account-banner" hidden></div>
         <ul id="account-list" class="account-list"></ul>
         <p class="hint tight" id="account-hint"></p>
+        <div id="player" class="player" hidden>
+          <div class="player-disc" id="player-disc"></div>
+          <div class="player-main">
+            <div class="player-title" id="player-title">未在播放</div>
+            <div class="player-controls">
+              <button id="pl-prev" class="pl-btn" title="上一首">⏮</button>
+              <button id="pl-play" class="pl-btn" title="播放/暂停">▶</button>
+              <button id="pl-next" class="pl-btn" title="下一首">⏭</button>
+              <button id="pl-mode" class="pl-btn" title="播放模式：顺序">➡</button>
+            </div>
+            <div class="player-progress">
+              <span class="pl-time" id="pl-time">00:00</span>
+              <input id="pl-seek" class="pl-seek" type="range" min="0" max="1000" value="0" />
+              <span class="pl-time" id="pl-duration">00:00</span>
+            </div>
+            <div class="player-volume">
+              <span class="hint tight">🔊</span>
+              <input id="pl-volume" class="pl-volume" type="range" min="0" max="100" value="80" />
+              <button id="pl-list" class="pl-btn" title="播放列表">☰</button>
+            </div>
+          </div>
+          <div id="pl-playlist" class="pl-playlist" hidden></div>
+        </div>
         <div class="supported-block">
           <div class="supported-title">支持的网盘</div>
           <div class="supported-grid" id="supported-grid"></div>
-          <p class="hint tight">标注 Web 的可直接在网页操作；其余添加后可在客户端使用</p>
         </div>
       </aside>
 
@@ -98,7 +120,11 @@
               <button id="btn-scan-stop" class="btn btn-sm" hidden>停止扫描</button>
             </div>
           </div>
-          <p class="hint tight">扫描当前选中账号的网盘目录（最多 150 个文件夹），找到的音频/视频可在线播放或下载。</p>
+          <div class="scan-targets">
+            <div class="hint tight">选择要扫描的网盘</div>
+            <div id="scan-target-list" class="scan-target-list"></div>
+          </div>
+          <p class="hint tight">扫描所选网盘的目录（每个账号最多 150 个文件夹），找到的音频/视频可在线播放或下载。</p>
           <p id="media-msg" class="msg"></p>
           <div class="media-tabs">
             <button id="media-tab-music" class="btn btn-sm is-active">音乐</button>
@@ -118,27 +144,11 @@
       </section>
     </main>
 
-    <!-- 迷你播放器 -->
-    <div id="player" class="player" hidden>
-      <div class="player-disc" id="player-disc"></div>
-      <div class="player-main">
-        <div class="player-title" id="player-title">未在播放</div>
-        <div class="player-controls">
-          <button id="pl-prev" class="pl-btn" title="上一首">⏮</button>
-          <button id="pl-play" class="pl-btn" title="播放/暂停">▶</button>
-          <button id="pl-next" class="pl-btn" title="下一首">⏭</button>
-          <span class="pl-time" id="pl-time">00:00 / 00:00</span>
-          <input id="pl-seek" class="pl-seek" type="range" min="0" max="1000" value="0" />
-          <button id="pl-list" class="pl-btn" title="播放列表">☰</button>
-        </div>
-      </div>
-      <div id="pl-playlist" class="pl-playlist" hidden></div>
-    </div>
     <audio id="pl-audio" preload="none"></audio>
 
     <div id="modal-root"></div>
     <script src="assets/qrcode.js"></script>
     <script src="config.js"></script>
-    <script src="app.js?v=20261025f"></script>
+    <script src="app.js?v=20261025g"></script>
   </body>
 </html>

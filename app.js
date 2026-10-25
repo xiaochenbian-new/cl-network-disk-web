@@ -49,6 +49,9 @@
     page: "files", // files | media
     mediaKind: "music", // music | video
     mediaItems: [],
+    scanTargetIds: [],
+    mediaPage: 1,
+    plMode: "sequence", // sequence | random | loop
     scanning: false,
     scanAbort: false,
     playlist: [],
@@ -241,6 +244,7 @@
     $("tab-files").hidden = false;
     $("tab-media").hidden = false;
     renderAccounts();
+    renderScanTargets();
   }
 
   function doLogout(expired) {
@@ -778,9 +782,7 @@
       console.error("[网兜Web] 账号渲染失败", err);
       $("account-hint").textContent = "账号渲染失败：" + (err instanceof Error ? err.message : String(err));
     }
-    $("account-hint").textContent = unsupported
-      ? unsupported + " 个账号的网盘暂不支持 Web 端操作，请在客户端使用"
-      : $("account-hint").textContent;
+    $("account-hint").textContent = "";
   }
 
   async function loadSpace(acc) {
@@ -798,12 +800,40 @@
     state.selectedId = id;
     state.crumbs = [{ id: "", name: "根目录" }];
     state.mediaItems = [];
+    if (state.scanTargetIds.indexOf(id) === -1 && state.supported[accountById(id).provider]) {
+      state.scanTargetIds.push(id);
+    }
     renderAccounts();
+    renderScanTargets();
     renderMedia();
     var acc = accountById(id);
     if (acc) void loadSpace(acc);
     setPage(state.page);
     if (state.page === "files") await loadFiles("");
+  }
+
+  function renderScanTargets() {
+    var box = $("scan-target-list");
+    if (!box) return;
+    box.textContent = "";
+    state.accounts.forEach(function (acc) {
+      if (!state.supported[acc.provider]) return;
+      var label = document.createElement("label");
+      label.className = "scan-target";
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = state.scanTargetIds.indexOf(acc.id) !== -1;
+      cb.addEventListener("change", function () {
+        if (cb.checked) {
+          if (state.scanTargetIds.indexOf(acc.id) === -1) state.scanTargetIds.push(acc.id);
+        } else {
+          state.scanTargetIds = state.scanTargetIds.filter(function (id) { return id !== acc.id; });
+        }
+      });
+      label.appendChild(cb);
+      label.appendChild(document.createTextNode(acc.label || acc.username || acc.provider));
+      box.appendChild(label);
+    });
   }
 
   /* ---------------- 文件浏览与操作 ---------------- */
@@ -941,7 +971,7 @@
   }
 
   var downloadUrlFor = (f, accOverride) => {
-    var a = accOverride || accountById(state.selectedId);
+    var a = accOverride || (f.accountId ? accountById(f.accountId) : null) || accountById(state.selectedId);
     if (!a) throw new Error("请先选择账号");
     var d = utf8ToB64url(JSON.stringify({
       provider: a.provider,
@@ -1055,10 +1085,15 @@
     $("media-tab-video").className = "btn btn-sm" + (kind === "video" ? " is-active" : "");
   }
 
+  var MEDIA_PAGE_SIZE = 20;
+
   function renderMedia() {
     var tbody = $("media-tbody");
     tbody.textContent = "";
     var items = state.mediaItems;
+    var pages = Math.max(1, Math.ceil(items.length / MEDIA_PAGE_SIZE));
+    if (state.mediaPage > pages) state.mediaPage = pages;
+    var slice = items.slice((state.mediaPage - 1) * MEDIA_PAGE_SIZE, state.mediaPage * MEDIA_PAGE_SIZE);
     if (!items.length) {
       var er = document.createElement("tr");
       var td = document.createElement("td");
@@ -1073,7 +1108,8 @@
       tbody.appendChild(er);
       return;
     }
-    items.forEach(function (it, idx) {
+    slice.forEach(function (it) {
+      var globalIdx = items.indexOf(it);
       var tr = document.createElement("tr");
       var tdName = document.createElement("td");
       tdName.className = "col-name";
@@ -1094,7 +1130,7 @@
         play.type = "button";
         play.className = "btn btn-sm btn-primary";
         play.textContent = "播放";
-        play.addEventListener("click", function () { playTrack(idx); });
+        play.addEventListener("click", function () { playTrack(globalIdx); });
         tdOps.appendChild(play);
       }
       var dl = document.createElement("button");
@@ -1106,81 +1142,123 @@
       tr.appendChild(tdOps);
       tbody.appendChild(tr);
     });
+    // 分页条
+    if (pages > 1 || items.length > 0) {
+      var pager = document.createElement("tr");
+      var pd = document.createElement("td");
+      pd.colSpan = 4;
+      pd.className = "empty-cell pager-cell";
+      if (state.mediaPage > 1) {
+        var prev = document.createElement("button");
+        prev.type = "button";
+        prev.className = "btn btn-sm";
+        prev.textContent = "上一页";
+        prev.addEventListener("click", function () { state.mediaPage -= 1; renderMedia(); });
+        pd.appendChild(prev);
+      }
+      var info = document.createElement("span");
+      info.textContent = " 第 " + state.mediaPage + " / " + pages + " 页（共 " + items.length + " 个） ";
+      pd.appendChild(info);
+      if (state.mediaPage < pages) {
+        var next = document.createElement("button");
+        next.type = "button";
+        next.className = "btn btn-sm";
+        next.textContent = "下一页";
+        next.addEventListener("click", function () { state.mediaPage += 1; renderMedia(); });
+        pd.appendChild(next);
+      }
+      pager.appendChild(pd);
+      tbody.appendChild(pager);
+    }
   }
 
   async function scanMedia(kind) {
     if (state.scanning) return;
-    if (!state.selectedId) {
-      setMsg($("media-msg"), "请先在左侧选择账号", true);
+    var targets = state.scanTargetIds.slice();
+    if (!targets.length) {
+      setMsg($("media-msg"), "请先勾选要扫描的网盘账号", true);
       return;
     }
     state.scanning = true;
     state.scanAbort = false;
     state.mediaKind = kind;
     state.mediaItems = [];
+    state.mediaPage = 1;
     renderMedia();
     setMediaTab(kind);
     $("btn-scan-music").disabled = true;
     $("btn-scan-video").disabled = true;
     $("btn-scan-stop").hidden = false;
     var msgEl = $("media-msg");
-    setMsg(msgEl, "扫描中：已扫 0 个目录，找到 0 个", false);
 
     var exts = kind === "music" ? AUDIO_EXTS : VIDEO_EXTS;
-    var queue = [""];
-    var scanned = 0;
-    var found = [];
-    var inFlight = 0;
+    var totalScanned = 0;
+    var totalFound = 0;
 
     function isTarget(name) {
       return exts.indexOf(extOf(name)) !== -1;
     }
 
-    await new Promise(function (resolve) {
-      function maybeDone() {
-        if (!queue.length && !inFlight) resolve();
-      }
-      function launchNext() {
-        if (state.scanAbort) { resolve(); return; }
-        if (!queue.length || scanned >= SCAN_MAX_FOLDERS) { maybeDone(); return; }
-        var dir = queue.shift();
-        scanned += 1;
-        inFlight += 1;
-        setMsg(msgEl, "扫描中：已扫 " + scanned + " 个目录，找到 " + found.length + " 个", false);
-        proxy("list", { parentFileId: dir })
-          .then(function (r) {
-            (r.items || []).forEach(function (f) {
-              if (f.isFolder) {
-                if (queue.length + inFlight < SCAN_MAX_FOLDERS) queue.push(f.fileId);
-              } else if (isTarget(f.filename)) {
-                var copy = Object.assign({}, f, { path: f.filename });
-                found.push(copy);
-              }
+    for (var t = 0; t < targets.length; t++) {
+      if (state.scanAbort) break;
+      var acc = accountById(targets[t]);
+      if (!acc) continue;
+      state.selectedId = acc.id;
+      renderAccounts();
+      var queue = [""];
+      var scanned = 0;
+      var inFlight = 0;
+
+      await new Promise(function (resolve) {
+        function maybeDone() {
+          if (!queue.length && !inFlight) resolve();
+        }
+        function launchNext() {
+          if (state.scanAbort) { resolve(); return; }
+          if (!queue.length || scanned >= SCAN_MAX_FOLDERS) { maybeDone(); return; }
+          var dir = queue.shift();
+          scanned += 1;
+          totalScanned += 1;
+          inFlight += 1;
+          setMsg(msgEl, "正在扫描「" + (acc.label || acc.provider) + "」：已扫 " + scanned + " 个目录，找到 " + totalFound + " 个", false);
+          proxyFor(acc, "list", { parentFileId: dir })
+            .then(function (r) {
+              (r.items || []).forEach(function (f) {
+                if (f.isFolder) {
+                  if (queue.length + inFlight < SCAN_MAX_FOLDERS) queue.push(f.fileId);
+                } else if (isTarget(f.filename)) {
+                  totalFound += 1;
+                  state.mediaItems.push(Object.assign({}, f, { accountId: acc.id, path: f.filename }));
+                }
+              });
+              state.mediaPage = 1;
+              renderMedia();
+              inFlight -= 1;
+              maybeDone();
+              launchNext();
+            })
+            .catch(function () {
+              inFlight -= 1;
+              maybeDone();
+              launchNext();
             });
-            inFlight -= 1;
-            maybeDone();
-            launchNext();
-          })
-          .catch(function () {
-            inFlight -= 1;
-            maybeDone();
-            launchNext();
-          });
-      }
-      launchNext();
-      launchNext();
-    });
+        }
+        launchNext();
+        launchNext();
+      });
+    }
 
     state.scanning = false;
+    state.selectedId = targets[0];
+    renderAccounts();
     $("btn-scan-music").disabled = false;
     $("btn-scan-video").disabled = false;
     $("btn-scan-stop").hidden = true;
-    state.mediaItems = found;
     renderMedia();
     setMsg(
       msgEl,
       (state.scanAbort ? "已停止。" : "扫描完成。") +
-        "共扫 " + scanned + " 个目录，找到 " + found.length + " 个" + (kind === "music" ? "音乐" : "视频"),
+        "共扫 " + totalScanned + " 个目录，找到 " + totalFound + " 个" + (kind === "music" ? "音乐" : "视频"),
       false
     );
   }
@@ -1237,10 +1315,33 @@
     startCurrentTrack();
   }
 
+  function pickNextIndex() {
+    var n = state.playlist.length;
+    if (state.plMode === "loop") return state.plIndex;
+    if (state.plMode === "random") {
+      if (n <= 1) return 0;
+      var i = state.plIndex;
+      var guard = 0;
+      while (i === state.plIndex && guard++ < 10) i = Math.floor(Math.random() * n);
+      return i;
+    }
+    return (state.plIndex + 1) % n;
+  }
+
   function plNext() {
     if (!state.playlist.length) return;
-    state.plIndex = (state.plIndex + 1) % state.playlist.length;
+    state.plIndex = pickNextIndex();
     startCurrentTrack();
+  }
+
+  function cyclePlMode() {
+    state.plMode = state.plMode === "sequence" ? "random" : state.plMode === "random" ? "loop" : "sequence";
+    $("pl-mode").textContent = state.plMode === "sequence" ? "➡" : state.plMode === "random" ? "🔀" : "🔂";
+    $("pl-mode").title = "播放模式：" + (state.plMode === "sequence" ? "顺序" : state.plMode === "random" ? "随机" : "单曲循环");
+  }
+
+  function setVolume(v) {
+    plAudio().volume = Math.min(1, Math.max(0, Number(v) / 100));
   }
 
   function stopPlayer() {
@@ -1342,7 +1443,17 @@
   $("pl-seek").addEventListener("input", function (e) {
     if (audio.duration > 0) audio.currentTime = (Number(e.target.value) / 1000) * audio.duration;
   });
-  audio.addEventListener("ended", plNext);
+  audio.addEventListener("ended", function () {
+    if (state.plMode === "loop") {
+      audio.currentTime = 0;
+      audio.play();
+      return;
+    }
+    plNext();
+  });
+  $("pl-mode").addEventListener("click", cyclePlMode);
+  $("pl-volume").addEventListener("input", function (e) { setVolume(e.target.value); });
+  setVolume(80);
 
   // 侧栏底部:支持的网盘(与客户端一致的 7 家,Web 可操作的标绿)
   (function renderSupportedGrid() {

@@ -316,27 +316,24 @@ a { color: var(--primary); }
 .media-tabs .is-active { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); font-weight: 600; }
 .media-tabs .btn { border-radius: 8px; }
 
-/* 迷你播放器（对齐应用：左下角，唱片 + 控制） */
+/* 播放器（在侧栏内，固定于支持网盘上方，对齐应用端） */
 .player {
-  position: fixed;
-  left: 14px;
-  bottom: 14px;
-  z-index: 40;
+  position: relative;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 0.7rem;
+  gap: 0.6rem;
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 14px;
-  box-shadow: 0 10px 28px rgba(15, 34, 58, 0.14);
-  padding: 0.55rem 0.8rem;
-  width: 380px;
-  max-width: calc(100vw - 28px);
+  border-radius: 12px;
+  padding: 0.5rem 0.6rem;
+  width: 100%;
+  margin-bottom: 0.5rem;
 }
 .player-disc {
-  width: 52px;
-  height: 52px;
-  flex: 0 0 52px;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
   border-radius: 50%;
   background: radial-gradient(circle at 30% 30%, #35507a, #101d33 70%);
   border: 3px solid #0e1727;
@@ -352,6 +349,26 @@ a { color: var(--primary); }
 .player-disc.is-playing { animation: pl-spin 3.2s linear infinite; }
 @keyframes pl-spin { to { transform: rotate(360deg); } }
 .player-main { flex: 1; min-width: 0; }
+.player-progress { display: flex; align-items: center; gap: 0.3rem; }
+.player-volume { display: flex; align-items: center; gap: 0.25rem; }
+.pl-volume { width: 56px; accent-color: var(--primary); height: 4px; }
+.pl-seek { flex: 1; min-width: 40px; accent-color: var(--primary); height: 4px; }
+
+.scan-targets { margin: 0.5rem 0; }
+.scan-target-list { display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; margin-top: 0.25rem; }
+.scan-target {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.86rem;
+  cursor: pointer;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.28rem 0.55rem;
+}
+.scan-target input { accent-color: var(--primary); }
+.pager-cell { display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
 .player-title {
   font-size: 0.84rem;
   font-weight: 600;
@@ -372,13 +389,12 @@ a { color: var(--primary); }
 }
 .pl-btn:hover { background: var(--primary-soft); }
 .pl-time { font-size: 0.74rem; color: var(--muted); white-space: nowrap; }
-.pl-seek { flex: 1; min-width: 40px; accent-color: var(--primary); height: 4px; }
 .pl-playlist {
   position: absolute;
   bottom: calc(100% + 8px);
   left: 0;
   width: 100%;
-  max-height: 260px;
+  max-height: 220px;
   overflow-y: auto;
   background: var(--panel);
   border: 1px solid var(--line);
