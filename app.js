@@ -5,10 +5,14 @@
  */
 (function () {
   var cfg = window.WANGDOU_SITE || {};
-  var licenseApi = String(cfg.licenseApi || "https://license.wangdou.win").replace(/\/+$/, "");
+  // Web 端固定连生产核销系统：测试/生产环境账号与云端备份保持一致（应用端也同步到生产）
+  var licenseApi = "https://license.wangdou.win";
   var KDF_ITERATIONS = 120000;
+  var publicCfg = null; // { turnstileSiteKey, turnstileRequired }
 
   var state = {
+    authMode: "login", // login | register
+    captchaId: "",
     token: sessionStorage.getItem("wd_token") || "",
     email: sessionStorage.getItem("wd_email") || "",
     accounts: [], // 解密后的网盘账号（含凭证，仅内存）
@@ -161,19 +165,82 @@
     setMsg($("login-msg"), expired ? "登录已过期，请重新登录" : "已退出登录", expired);
   }
 
+  /* ---------------- Turnstile（iframe 引托管页，兼容 preview 域名） ---------------- */
+
+  function fetchPublicConfig() {
+    if (publicCfg) return Promise.resolve(publicCfg);
+    return fetch(licenseApi + "/api/user?action=public")
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        publicCfg = { turnstileSiteKey: j.turnstileSiteKey || "", turnstileRequired: Boolean(j.turnstileRequired) };
+        return publicCfg;
+      })
+      .catch(function () { return { turnstileSiteKey: "", turnstileRequired: false }; });
+  }
+
+  function mountTurnstile(container) {
+    return fetchPublicConfig().then(function (pc) {
+      if (!pc.turnstileRequired) return "";
+      return new Promise(function (resolve, reject) {
+        var f = document.createElement("iframe");
+        f.src = "https://wangdou.win/turnstile.html?sitekey=" + encodeURIComponent(pc.turnstileSiteKey);
+        f.width = "310";
+        f.height = "70";
+        f.style.border = "none";
+        container.appendChild(f);
+        var handler = function (e) {
+          if (e.origin !== "https://wangdou.win") return;
+          if (e.data && e.data.type === "TURNSTILE_TOKEN") {
+            window.removeEventListener("message", handler);
+            resolve(e.data.token || "");
+          } else if (e.data && e.data.type === "TURNSTILE_ERROR") {
+            window.removeEventListener("message", handler);
+            reject(new Error("人机验证失败，请重试"));
+          }
+        };
+        window.addEventListener("message", handler);
+      });
+    });
+  }
+
+  /* ---------------- 图形验证码 ---------------- */
+
+  function loadCaptcha() {
+    return fetch(licenseApi + "/api/user?action=captcha")
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j.ok) throw new Error(j.message || "验证码加载失败");
+        state.captchaId = j.captchaId;
+        $("captcha-img").innerHTML = j.svg;
+      })
+      .catch(function (err) {
+        $("captcha-img").textContent = "加载失败，点击刷新";
+        setMsg($("login-msg"), err instanceof Error ? err.message : String(err), true);
+      });
+  }
+
   /* ---------------- 登录与解锁 ---------------- */
 
   async function doLogin() {
     var email = $("login-email").value.trim();
     var password = $("login-password").value;
+    var captchaCode = ($("login-captcha") ? $("login-captcha").value : "").trim();
     var msgEl = $("login-msg");
     var btn = $("btn-login");
     if (!email || !password) { setMsg(msgEl, "请输入邮箱和密码", true); return; }
+    if (!captchaCode) { setMsg(msgEl, "请输入图形验证码", true); return; }
     btn.disabled = true;
     btn.textContent = "登录中…";
     setMsg(msgEl, "", false);
     try {
-      var r = await api("/api/user", { action: "login", email: email, password: password });
+      var r = await api("/api/user", {
+        action: "login",
+        email: email,
+        password: password,
+        client: "web",
+        captchaId: state.captchaId,
+        captchaCode: captchaCode,
+      });
       state.token = r.token;
       state.email = r.email;
       sessionStorage.setItem("wd_token", r.token);
@@ -199,6 +266,81 @@
     } finally {
       btn.disabled = false;
       btn.textContent = "登录";
+      loadCaptcha();
+    }
+  }
+
+  async function switchAuthMode(mode) {
+    state.authMode = mode;
+    var isLogin = mode === "login";
+    $("login-title").textContent = isLogin ? "登录网兜 Web" : "注册网兜账号";
+    $("login-hint").textContent = isLogin
+      ? "使用网兜账号（邮箱 + 密码）登录。登录后将在本机解密云端备份的网盘账号，凭证不经服务器存储。"
+      : "注册后可在任何设备登录网盘。需邮箱验证码 + 人机验证；密码经单向哈希校验，云备份以密码派生密钥端到端加密。";
+    $("register-fields").hidden = !isLogin ? false : true;
+    $("captcha-row").hidden = !isLogin;
+    $("btn-login").textContent = isLogin ? "登录" : "注册";
+    $("switch-mode").textContent = isLogin ? "没有账号？注册" : "已有账号？登录";
+    $("login-msg").textContent = "";
+    if (!isLogin) {
+      mountTurnstile($("turnstile-row")).catch(function (err) {
+        setMsg($("login-msg"), err instanceof Error ? err.message : String(err), true);
+      });
+    }
+  }
+
+  async function doRegister() {
+    var email = $("login-email").value.trim();
+    var password = $("login-password").value;
+    var code = ($("register-code") ? $("register-code").value : "").trim();
+    var msgEl = $("login-msg");
+    var btn = $("btn-login");
+    if (!email || password.length < 8) { setMsg(msgEl, "请输入邮箱和至少 8 位密码", true); return; }
+    if (!/^\d{6}$/.test(code)) { setMsg(msgEl, "请输入 6 位邮箱验证码", true); return; }
+    btn.disabled = true;
+    btn.textContent = "注册中…";
+    setMsg(msgEl, "", false);
+    try {
+      var r = await api("/api/user", { action: "register", email: email, password: password, code: code });
+      state.token = r.token;
+      state.email = r.email;
+      sessionStorage.setItem("wd_token", r.token);
+      sessionStorage.setItem("wd_email", r.email);
+      state.accounts = [];
+      showApp();
+      setMsg($("app-msg"), "注册成功。请先在网兜客户端登录并开启「云端备份」，之后 Web 端即可浏览网盘", false);
+    } catch (err) {
+      setMsg(msgEl, err instanceof Error ? err.message : String(err), true);
+      loadCaptcha();
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "注册";
+    }
+  }
+
+  async function doSendRegisterCode() {
+    var email = $("login-email").value.trim();
+    var sendBtn = $("btn-send-code");
+    if (sendBtn.disabled) return;
+    if (!email) { setMsg($("login-msg"), "请先输入邮箱", true); return; }
+    sendBtn.disabled = true;
+    sendBtn.textContent = "发送中…";
+    setMsg($("login-msg"), "", false);
+    try {
+      var turnstileToken = await mountTurnstile($("turnstile-row"));
+      var r = await api("/api/user", { action: "requestVerifyCode", email: email, turnstileToken: turnstileToken });
+      setMsg($("login-msg"), r.message || "验证码已发送，请查收邮件", false);
+      var left = 60;
+      sendBtn.textContent = left + "s 后重发";
+      var timer = setInterval(function () {
+        left -= 1;
+        if (left <= 0) { clearInterval(timer); sendBtn.textContent = "重新发送"; sendBtn.disabled = false; }
+        else { sendBtn.textContent = left + "s 后重发"; }
+      }, 1000);
+    } catch (err) {
+      setMsg($("login-msg"), err instanceof Error ? err.message : String(err), true);
+      sendBtn.disabled = false;
+      sendBtn.textContent = "获取验证码";
     }
   }
 
@@ -460,8 +602,17 @@
 
   /* ---------------- 初始化 ---------------- */
 
-  $("btn-login").addEventListener("click", doLogin);
-  $("login-password").addEventListener("keydown", function (e) { if (e.key === "Enter") doLogin(); });
+  $("btn-login").addEventListener("click", function () {
+    if (state.authMode === "login") doLogin();
+    else doRegister();
+  });
+  $("btn-send-code").addEventListener("click", doSendRegisterCode);
+  $("switch-mode").addEventListener("click", function () {
+    switchAuthMode(state.authMode === "login" ? "register" : "login");
+  });
+  $("captcha-img").addEventListener("click", loadCaptcha);
+  $("login-password").addEventListener("keydown", function (e) { if (e.key === "Enter") { if (state.authMode === "login") doLogin(); else doRegister(); } });
+  loadCaptcha();
   $("btn-logout").addEventListener("click", function () { doLogout(false); });
   $("btn-refresh").addEventListener("click", function () { loadFiles(currentParentId()); });
   $("btn-mkdir").addEventListener("click", mkdir);

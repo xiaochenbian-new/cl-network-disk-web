@@ -68,6 +68,11 @@
             callback: function (token) {
               status.textContent = "验证通过，正在返回网兜…";
               document.title = "TURNSTILE_TOKEN:" + token;
+              try {
+                if (window.parent && window.parent !== window) {
+                  window.parent.postMessage({ type: "TURNSTILE_TOKEN", token: token }, "*");
+                }
+              } catch (e) {}
               setTimeout(function () { window.close(); }, 400);
             },
             "expired-callback": function () {
@@ -75,6 +80,11 @@
             },
             "error-callback": function () {
               fail("验证组件出错，请关闭窗口重试");
+              try {
+                if (window.parent && window.parent !== window) {
+                  window.parent.postMessage({ type: "TURNSTILE_ERROR" }, "*");
+                }
+              } catch (e) {}
             },
           });
         }

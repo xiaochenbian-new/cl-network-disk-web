@@ -10,6 +10,8 @@
   --danger: #d4380d;
 }
 * { box-sizing: border-box; }
+/* hidden 属性优先于作者 display 规则（修复登录/主视图同时显示） */
+[hidden] { display: none !important; }
 body {
   margin: 0;
   background: var(--bg);
@@ -164,4 +166,28 @@ a { color: var(--accent); }
   justify-content: flex-end;
   gap: 0.5rem;
   margin-top: 1rem;
+}
+
+.login-card .code-row { display: flex; gap: 0.4rem; align-items: center; }
+.login-card .code-row input { flex: 1; width: auto; }
+.login-card .code-row .btn { white-space: nowrap; }
+.captcha-row { display: flex; gap: 0.5rem; align-items: flex-end; }
+.captcha-row label { flex: 1; }
+.captcha-img {
+  flex: 0 0 132px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  margin-bottom: 2px;
+}
+.captcha-img svg { display: block; }
+.turnstile-row { margin: 0.6rem 0 0; min-height: 70px; }
+.linklike {
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 0.4rem 0 0;
 }
