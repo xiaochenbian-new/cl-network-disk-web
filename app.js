@@ -30,6 +30,15 @@
     encKey: null, // 派生密钥（内存），用于把账号变更重新加密上传云端备份
     encSalt: null,
     supported: { "123": "123", baidu: "百度", aliyun: "阿里" },
+    providerNames: {
+      "123": "123 网盘",
+      aliyun: "阿里云盘",
+      lanzou: "蓝奏云",
+      baidu: "百度网盘",
+      xiaomi: "小米云盘",
+      quark: "夸克网盘",
+      "115": "115 网盘",
+    },
     token: sessionStorage.getItem("wd_token") || "",
     email: sessionStorage.getItem("wd_email") || "",
     accounts: [], // 解密后的网盘账号（含凭证，仅内存）
