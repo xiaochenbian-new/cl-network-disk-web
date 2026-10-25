@@ -29,6 +29,7 @@
     captchaId: "",
     encKey: null, // 派生密钥（内存），用于把账号变更重新加密上传云端备份
     encSalt: null,
+    supported: { "123": "123", baidu: "百度", aliyun: "阿里" },
     token: sessionStorage.getItem("wd_token") || "",
     email: sessionStorage.getItem("wd_email") || "",
     accounts: [], // 解密后的网盘账号（含凭证，仅内存）
@@ -393,7 +394,8 @@
       { key: "username", label: "账号（手机号/邮箱）", autofocus: true },
       { key: "password", label: "密码", type: "password" },
     ] },
-    { provider: "quark", label: "夸克网盘（粘贴 Cookie）", fields: [
+    { provider: "aliyun", label: "阿里云盘（扫码登录）", qr: true, fields: [] },
+    { provider: "quark", label: "夸克网盘（Cookie / 扫码）", qr: true, fields: [
       { key: "cookie", label: "夸克 Cookie（浏览器 DevTools 复制整段）", type: "textarea", autofocus: true },
     ] },
     { provider: "115", label: "115 网盘（粘贴 Cookie）", fields: [
@@ -471,9 +473,32 @@
     msgP.className = "msg";
     box.appendChild(msgP);
 
+    function finishAdd(acc) {
+      state.accounts.push(acc);
+      saveAccountsToCloud()
+        .then(function () {
+          mask.remove();
+          renderAccounts();
+          setMsg($("app-msg"), "已添加「" + acc.label + "」并加密同步到云端备份", false);
+        })
+        .catch(function (err) {
+          msgP.textContent = err instanceof Error ? err.message : String(err);
+          msgP.className = "msg is-error";
+        });
+    }
+
+    var pollTimer = null;
+    var pollGen = 0;
+
     function renderFields(def) {
       fieldBox.textContent = "";
       fields = def.fields;
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+      pollGen += 1;
+      var oldScan = box.querySelector(".scan-area");
+      if (oldScan) oldScan.remove();
+      // 无表单字段（纯扫码）时隐藏确定按钮（ok 可能尚未创建，先判空）
+      if (ok) ok.style.display = fields.length ? "" : "none";
       fields.forEach(function (f) {
         var label = document.createElement("label");
         label.textContent = f.label;
@@ -490,6 +515,105 @@
         label.appendChild(input);
         fieldBox.appendChild(label);
       });
+      if (def.qr) {
+        var scanArea = document.createElement("div");
+        scanArea.className = "scan-area";
+        var scanBtn = document.createElement("button");
+        scanBtn.type = "button";
+        scanBtn.className = "btn btn-primary";
+        scanBtn.textContent = "扫码登录";
+        var qrBox = document.createElement("div");
+        qrBox.className = "scan-qr";
+        var scanStatus = document.createElement("p");
+        scanStatus.className = "hint tight";
+        scanArea.appendChild(scanBtn);
+        scanArea.appendChild(qrBox);
+        scanArea.appendChild(scanStatus);
+        box.appendChild(scanArea);
+        var myGen = pollGen;
+        scanBtn.addEventListener("click", function () {
+          if (pollTimer) clearInterval(pollTimer);
+          var thisGen = pollGen;
+          scanBtn.disabled = true;
+          qrBox.textContent = "";
+          scanStatus.textContent = "正在生成二维码…";
+          var createP =
+            def.provider === "aliyun"
+              ? proxyFor({ provider: "aliyun", accessToken: "" }, "qr-create", {})
+              : proxyFor({ provider: "quark", accessToken: "" }, "qr-create", {});
+          createP.then(function (r) {
+            if (thisGen !== pollGen) return;
+            if (def.provider === "aliyun") {
+              var img = document.createElement("img");
+              img.src = r.qrDataUrl;
+              img.width = 190;
+              qrBox.appendChild(img);
+            } else {
+              var qr = window.qrcode(0, "M");
+              qr.addData(r.payloadUrl);
+              qr.make();
+              qrBox.innerHTML = qr.createImgTag(4, 8);
+            }
+            scanStatus.textContent = "请用对应网盘 App 扫码确认";
+            var tries = 0;
+            pollTimer = setInterval(function () {
+              if (thisGen !== pollGen || mask.isConnected === false) { clearInterval(pollTimer); return; }
+              tries += 1;
+              if (tries > 90) {
+                clearInterval(pollTimer);
+                scanStatus.textContent = "二维码已超时，请重新点击「扫码登录」";
+                return;
+              }
+              var pr =
+                def.provider === "aliyun"
+                  ? proxyFor({ provider: "aliyun", accessToken: "" }, "qr-poll", { sid: r.sid, cookie: r.cookie })
+                  : proxyFor({ provider: "quark", accessToken: "" }, "qr-poll", { token: r.token, requestId: r.requestId });
+              pr.then(function (p) {
+                if (thisGen !== pollGen) return;
+                if (!p.done) return;
+                clearInterval(pollTimer);
+                if (def.provider === "aliyun") {
+                  proxyFor({ provider: "aliyun", accessToken: p.accessToken }, "drive-id", {})
+                    .then(function (d) {
+                      finishAdd({
+                        id: "web-" + crypto.randomUUID(),
+                        provider: "aliyun",
+                        label: "阿里云盘",
+                        accessToken: p.accessToken,
+                        refreshToken: p.refreshToken,
+                        driveId: d.driveId,
+                        status: "online",
+                        defaultParentId: "",
+                        defaultParentPath: "/",
+                      });
+                      mask.remove();
+                    })
+                    .catch(function (err) {
+                      scanStatus.textContent = err.message;
+                      scanBtn.disabled = false;
+                    });
+                } else {
+                  finishAdd({
+                    id: "web-" + crypto.randomUUID(),
+                    provider: "quark",
+                    label: "夸克网盘",
+                    cookie: p.cookie,
+                    status: "online",
+                    defaultParentId: "",
+                    defaultParentPath: "/",
+                  });
+                  mask.remove();
+                }
+              }).catch(function (err) {
+                scanStatus.textContent = err.message;
+              });
+            }, 2000);
+          }).catch(function (err) {
+            scanStatus.textContent = err instanceof Error ? err.message : String(err);
+            scanBtn.disabled = false;
+          });
+        });
+      }
     }
     providerSel.addEventListener("change", function () {
       renderFields(ADDABLE[Number(providerSel.value)]);

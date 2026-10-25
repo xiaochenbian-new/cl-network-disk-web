@@ -412,3 +412,7 @@ a { color: var(--primary); }
   gap: 0.5rem;
   margin-top: 1rem;
 }
+
+.scan-area { margin-top: 0.6rem; }
+.scan-qr { margin-top: 0.5rem; display: flex; justify-content: center; }
+.scan-qr img { border: 1px solid var(--line); border-radius: 8px; }

@@ -15,6 +15,8 @@ export function json(obj, status = 200, request) {
   });
 }
 
+import { aliyunQrCreate, aliyunQrPoll, aliyunDriveId, quarkQrCreate, quarkQrPoll } from "./qr.js";
+
 const PAN_UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
 
@@ -527,6 +529,16 @@ export async function proxyAction(provider, action, auth, params) {
       return await p123Space(auth);
     case "123:login":
       return await p123Login(params);
+    case "aliyun:qr-create":
+      return await aliyunQrCreate();
+    case "aliyun:qr-poll":
+      return await aliyunQrPoll(auth, params);
+    case "aliyun:drive-id":
+      return await aliyunDriveId(auth);
+    case "quark:qr-create":
+      return await quarkQrCreate();
+    case "quark:qr-poll":
+      return await quarkQrPoll(params);
     case "baidu:space":
       return await baiduSpace(auth);
     case "aliyun:space":
