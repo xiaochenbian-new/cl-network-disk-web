@@ -88,11 +88,18 @@
     var parts = String(blob).split(":");
     if (parts[0] !== "wd1") throw new Error("备份格式不识别，请升级客户端");
     var raw = new Uint8Array(b64ToBuf(parts[1]));
-    var plain = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv: raw.slice(0, 12) },
-      key,
-      raw.slice(28)
-    );
+    // blob 布局为 iv|tag|ct（Node 风格），WebCrypto 要求 ct||tag，需要重排
+    var ct = raw.slice(28);
+    var tag = raw.slice(12, 28);
+    var combined = new Uint8Array(ct.length + tag.length);
+    combined.set(ct, 0);
+    combined.set(tag, ct.length);
+    var plain;
+    try {
+      plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: raw.slice(0, 12) }, key, combined);
+    } catch (e) {
+      throw new Error("解密失败：云端备份与当前密码不匹配。请确认使用与客户端相同的密码登录；若刚重置过密码，请在客户端退出登录后重新登录一次");
+    }
     var parsed = JSON.parse(new TextDecoder().decode(plain));
     if (!parsed || parsed.v !== 1 || !Array.isArray(parsed.accounts)) throw new Error("备份内容格式不识别");
     return parsed;
