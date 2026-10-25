@@ -12,7 +12,11 @@
     <header class="topbar">
       <a class="brand" href="/"><img src="assets/app-icon.png" alt="网兜" width="26" height="26" /><span>网兜 Web</span></a>
       <span id="user-chip" class="user-chip" hidden></span>
-      <button id="btn-logout" class="btn btn-ghost btn-sm" hidden>退出登录</button>
+      <div class="topbar-actions">
+        <button id="tab-files" class="btn btn-sm topbar-btn is-active">文件管理</button>
+        <button id="tab-media" class="btn btn-sm topbar-btn">音乐视频</button>
+        <button id="btn-logout" class="btn btn-sm topbar-btn" hidden>退出登录</button>
+      </div>
     </header>
 
     <!-- 登录视图 -->
@@ -47,31 +51,84 @@
     <!-- 主视图 -->
     <main id="view-app" class="app-view" hidden>
       <aside class="side">
-        <div class="side-head">网盘账号</div>
+        <div class="side-head">
+          存储账号
+          <span class="side-head-hint">添加账号请使用客户端</span>
+        </div>
         <ul id="account-list" class="account-list"></ul>
         <p class="hint tight" id="account-hint"></p>
       </aside>
+
       <section class="main">
-        <div class="toolbar">
-          <div id="crumbs" class="crumbs"></div>
-          <div class="toolbar-actions">
-            <button id="btn-refresh" class="btn btn-sm">刷新</button>
-            <button id="btn-mkdir" class="btn btn-sm">新建文件夹</button>
+        <!-- 文件管理 -->
+        <div id="page-files" class="page">
+          <div class="toolbar">
+            <div id="crumbs" class="crumbs"></div>
+            <div class="toolbar-actions">
+              <button id="btn-refresh" class="btn btn-sm">刷新</button>
+              <button id="btn-mkdir" class="btn btn-sm">新建文件夹</button>
+            </div>
+          </div>
+          <p id="app-msg" class="msg"></p>
+          <div class="table-wrap">
+            <table class="file-table">
+              <thead>
+                <tr><th class="col-check"></th><th>名称</th><th class="col-size">大小</th><th class="col-time">修改时间</th><th class="col-ops">操作</th></tr>
+              </thead>
+              <tbody id="file-tbody">
+                <tr><td colspan="5" class="empty-cell">选择左侧账号浏览文件</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
-        <p id="app-msg" class="msg"></p>
-        <div class="table-wrap">
-          <table class="file-table">
-            <thead>
-              <tr><th class="col-check"></th><th>名称</th><th class="col-size">大小</th><th class="col-time">修改时间</th><th class="col-ops">操作</th></tr>
-            </thead>
-            <tbody id="file-tbody">
-              <tr><td colspan="5" class="empty-cell">选择左侧账号浏览文件</td></tr>
-            </tbody>
-          </table>
+
+        <!-- 音乐视频 -->
+        <div id="page-media" class="page" hidden>
+          <div class="media-head">
+            <h2>音乐视频</h2>
+            <div class="media-actions">
+              <button id="btn-scan-music" class="btn btn-sm btn-primary">扫描音乐</button>
+              <button id="btn-scan-video" class="btn btn-sm">扫描视频</button>
+              <button id="btn-scan-stop" class="btn btn-sm" hidden>停止扫描</button>
+            </div>
+          </div>
+          <p class="hint tight">扫描当前选中账号的网盘目录（最多 150 个文件夹），找到的音频/视频可在线播放或下载。</p>
+          <p id="media-msg" class="msg"></p>
+          <div class="media-tabs">
+            <button id="media-tab-music" class="btn btn-sm is-active">音乐</button>
+            <button id="media-tab-video" class="btn btn-sm">视频</button>
+          </div>
+          <div class="table-wrap">
+            <table class="file-table">
+              <thead>
+                <tr><th>名称</th><th class="col-size">大小</th><th>路径</th><th class="col-ops">操作</th></tr>
+              </thead>
+              <tbody id="media-tbody">
+                <tr><td colspan="4" class="empty-cell">还没有扫描结果，点击上方「扫描音乐」开始</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
     </main>
+
+    <!-- 迷你播放器 -->
+    <div id="player" class="player" hidden>
+      <div class="player-disc" id="player-disc"></div>
+      <div class="player-main">
+        <div class="player-title" id="player-title">未在播放</div>
+        <div class="player-controls">
+          <button id="pl-prev" class="pl-btn" title="上一首">⏮</button>
+          <button id="pl-play" class="pl-btn" title="播放/暂停">▶</button>
+          <button id="pl-next" class="pl-btn" title="下一首">⏭</button>
+          <span class="pl-time" id="pl-time">00:00 / 00:00</span>
+          <input id="pl-seek" class="pl-seek" type="range" min="0" max="1000" value="0" />
+          <button id="pl-list" class="pl-btn" title="播放列表">☰</button>
+        </div>
+      </div>
+      <div id="pl-playlist" class="pl-playlist" hidden></div>
+    </div>
+    <audio id="pl-audio" preload="none"></audio>
 
     <div id="modal-root"></div>
     <script src="config.js"></script>

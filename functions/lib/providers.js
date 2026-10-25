@@ -190,6 +190,14 @@ async function p123Delete(auth, items) {
   return { ok: true };
 }
 
+async function p123Space(auth) {
+  const data = await p123Request(auth, "GET", B_API + "/user/info");
+  return {
+    usedBytes: Number(data.usedCapacity || data.UsedCapacity || 0),
+    totalBytes: Number(data.capacity || data.Capacity || 0) || undefined,
+  };
+}
+
 async function p123Download(auth, item) {
   const payload = {
     driveId: 0,
@@ -307,6 +315,14 @@ async function baiduDelete(auth, items) {
   return { ok: true };
 }
 
+async function baiduSpace(auth) {
+  const url = "https://pan.baidu.com/api/quota?checkexpire=1&checkfree=1&access_token=" + auth.accessToken;
+  const res = await fetch(url, { headers: { "user-agent": PAN_UA } });
+  const json = await res.json();
+  if (json.errno && json.errno !== 0) throw new Error("获取百度空间失败 errno=" + json.errno);
+  return { usedBytes: Number(json.used || 0), totalBytes: Number(json.total || 0) || undefined };
+}
+
 async function baiduDownload(auth, item) {
   const fsId = Number(item.fileId);
   const url = baiduUrl(
@@ -412,6 +428,24 @@ async function aliyunDelete(auth, items) {
   return { ok: true };
 }
 
+async function aliyunSpace(auth) {
+  const data = await aliyunRequest(auth, "/adrive/v1.0/users/getDriveInfo", {});
+  const di = (data.default_drive_id || auth.driveId || "") && (data.drive_infos || data.personal_space_info || []);
+  let used = 0, total = 0;
+  const pick = (info) => {
+    if (!info) return;
+    used = Number(info.used_size || used) || used;
+    total = Number(info.total_size || total) || total;
+  };
+  if (Array.isArray(data.drive_infos)) {
+    for (const d of data.drive_infos) if (d.drive_id === auth.driveId) pick(d);
+  } else if (data.personal_space_info) {
+    pick(data.personal_space_info);
+  }
+  void di;
+  return { usedBytes: used, totalBytes: total || undefined };
+}
+
 async function aliyunDownload(auth, item) {
   const data = await aliyunRequest(auth, "/adrive/v1.0/openFile/get_download_url", {
     drive_id: auth.driveId,
@@ -457,6 +491,12 @@ export async function proxyAction(provider, action, auth, params) {
       return await aliyunDelete(auth, params.items || []);
     case "aliyun:download":
       return await aliyunDownload(auth, params.item);
+    case "123:space":
+      return await p123Space(auth);
+    case "baidu:space":
+      return await baiduSpace(auth);
+    case "aliyun:space":
+      return await aliyunSpace(auth);
     default:
       throw new Error(`该网盘暂不支持 ${action} 操作，请在客户端使用`);
   }
