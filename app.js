@@ -669,7 +669,14 @@
         renderAccounts();
         setMsg($("app-msg"), "已添加「" + acc.label + "」并加密同步到云端备份", false);
       }).catch(function (err) {
-        msgP.textContent = err instanceof Error ? err.message : String(err);
+        var msg = err instanceof Error ? err.message : String(err);
+        // 123 官方对数据中心 IP 有境外登录风控：引导用户去客户端添加
+        if (/境外|风险|短信验证码/.test(msg)) {
+          msg = msg + "\n解决办法：请在网兜客户端「添加账号」登录该网盘（本机登录无风控），并开启云端备份，Web 端即可使用。";
+        }
+        msgP.textContent = msg;
+        msgP.className = "msg is-error";
+        msgP.style.whiteSpace = "pre-line";
         ok.disabled = false;
       });
     });
@@ -1246,6 +1253,37 @@
   loadCaptcha();
 
   $("btn-add-account").addEventListener("click", openAddAccount);
+
+  // 侧栏宽度拖动（对齐应用端：左侧列表与右侧内容可调）
+  (function initSideResize() {
+    var saved = Number(localStorage.getItem("wd_side_w"));
+    if (saved >= 200 && saved <= 480) $("view-app").querySelector(".side").style.width = saved + "px";
+    var resizer = document.createElement("div");
+    resizer.className = "side-resizer";
+    resizer.title = "拖动调整宽度";
+    var side = $("view-app").querySelector(".side");
+    side.parentNode.insertBefore(resizer, side.nextSibling);
+    var dragging = false;
+    resizer.addEventListener("mousedown", function (e) {
+      dragging = true;
+      e.preventDefault();
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+    });
+    document.addEventListener("mousemove", function (e) {
+      if (!dragging) return;
+      var w = Math.min(480, Math.max(200, e.clientX));
+      side.style.width = w + "px";
+    });
+    document.addEventListener("mouseup", function () {
+      if (!dragging) return;
+      dragging = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      var w = parseInt(side.style.width, 10);
+      if (w) localStorage.setItem("wd_side_w", String(w));
+    });
+  })();
   $("btn-refresh").addEventListener("click", function () { loadFiles(currentParentId()); });
   $("btn-mkdir").addEventListener("click", mkdir);
   $("btn-logout").addEventListener("click", function () { doLogout(false); });
@@ -1296,7 +1334,7 @@
       img.src = PROVIDER_ICONS[p.id] || "";
       img.alt = "";
       span.appendChild(img);
-      span.appendChild(document.createTextNode(p.name + (state.supported[p.id] ? " Web" : "")));
+      span.appendChild(document.createTextNode(p.name));
       grid.appendChild(span);
     });
   })();

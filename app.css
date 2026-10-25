@@ -267,6 +267,15 @@ a { color: var(--primary); }
 }
 .acc-bar-fill { height: 100%; background: var(--primary); border-radius: 3px; }
 .main { flex: 1; min-width: 0; padding: 0.8rem 1.1rem; }
+
+.side-resizer {
+  flex: 0 0 5px;
+  cursor: col-resize;
+  background: transparent;
+  margin: 0 -2px;
+  z-index: 10;
+}
+.side-resizer:hover { background: var(--primary-soft); }
 .page { width: 100%; }
 
 /* 工具栏 */
