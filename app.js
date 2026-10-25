@@ -686,10 +686,11 @@
     var ul = $("account-list");
     ul.textContent = "";
     var unsupported = 0;
+    var supportedMap = state.supported || { "123": "123", baidu: "百度", aliyun: "阿里" };
     try {
     state.accounts.forEach(function (acc) {
       var li = document.createElement("li");
-      var supported = !!state.supported[acc.provider];
+      var supported = !!supportedMap[acc.provider];
       if (supported) {
         li.dataset.accId = acc.id;
         if (acc.id === state.selectedId) li.className = "is-active";
@@ -757,7 +758,7 @@
   }
 
   async function loadSpace(acc) {
-    if (state.spaceInfo[acc.id] || !state.supported[acc.provider]) return;
+    if (state.spaceInfo[acc.id] || !state.supported || !state.supported[acc.provider]) return;
     try {
       var r = await proxyFor(acc, "space", {});
       state.spaceInfo[acc.id] = r;
