@@ -227,6 +227,31 @@
 
   /* ---------------- 视图切换 ---------------- */
 
+  /** 登录入口开关：null=未取到（保持原有行为，避免接口异常把用户锁在门外） */
+  var featureFlags = { loginEnabled: null };
+
+  function applyLoginGate() {
+    if (featureFlags.loginEnabled !== false) return;
+    var box = $("login-form-box");
+    var closed = $("login-closed");
+    if (box) box.hidden = true;
+    if (closed) closed.hidden = false;
+  }
+
+  async function loadFeatureFlags() {
+    try {
+      var res = await fetch(licenseApi + "/api/plans?appId=wangdou", {
+        headers: { Connection: "close" }
+      });
+      var data = await res.json();
+      var f = data && data.features;
+      featureFlags.loginEnabled = Boolean(f && f.loginEnabled);
+    } catch (err) {
+      featureFlags.loginEnabled = null;
+    }
+    return featureFlags.loginEnabled !== false;
+  }
+
   function showLogin() {
     $("view-login").hidden = false;
     $("view-app").hidden = true;
@@ -235,6 +260,7 @@
     $("tab-files").hidden = true;
     $("tab-media").hidden = true;
     $("btn-about").hidden = true;
+    applyLoginGate();
   }
 
   function showApp() {
@@ -1566,7 +1592,6 @@
   $("login-password").addEventListener("keydown", function (e) {
     if (e.key === "Enter") { if (state.authMode === "login") doLogin(); else doRegister(); }
   });
-  loadCaptcha();
 
   $("btn-add-account").addEventListener("click", openAddAccount);
 
@@ -1676,6 +1701,9 @@
 
   // 刷新自动恢复：token + sessionStorage 里的派生密钥都还在时，直接解密进入
   (async function tryRestore() {
+    // 先取功能开关：关闭时登录表单换成「暂未开放」提示，且不再发验证码请求
+    var allowLogin = await loadFeatureFlags();
+    if (allowLogin) loadCaptcha();
     var storedKey = localStorage.getItem("wd_enckey");
     var storedSalt = localStorage.getItem("wd_ensalt");
     if (!state.token || !state.email || !storedKey || !storedSalt) { showLogin(); return; }

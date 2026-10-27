@@ -145,6 +145,9 @@
     if (about && Array.isArray(about.providers)) renderProviders(about.providers);
     if (data && Array.isArray(data.benefits)) renderBenefits(data.benefits);
     renderContacts(data && data.contacts);
+    // 登录入口：核销后台「功能开关」开启才展示（HTML 里默认 hidden，避免闪一下）
+    var loginNav = document.getElementById("nav-login");
+    if (loginNav) loginNav.hidden = !(data && data.features && data.features.loginEnabled);
   }
 
   function contactHref(item) {

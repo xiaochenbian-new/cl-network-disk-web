@@ -23,29 +23,36 @@
     <!-- 登录视图 -->
     <main id="view-login" class="login-view">
       <div class="login-card">
-        <h1 id="login-title">登录网兜 Web</h1>
-        <p class="hint" id="login-hint">使用网兜账号（邮箱 + 密码）登录。登录状态将保持在本机，无需每次刷新重新登录。</p>
-        <label>邮箱<input id="login-email" type="email" placeholder="you@example.com" autocomplete="username" /></label>
-        <label>密码<input id="login-password" type="password" placeholder="登录密码" autocomplete="current-password" /></label>
-        <div id="register-fields" hidden>
-          <label>邮箱验证码<span class="code-row">
-            <input id="register-code" type="text" inputmode="numeric" maxlength="6" placeholder="6 位验证码" />
-            <button id="btn-send-code" type="button" class="btn btn-sm">获取验证码</button>
-          </span></label>
-          <div id="turnstile-row" class="turnstile-row"></div>
+        <div id="login-form-box">
+          <h1 id="login-title">登录网兜 Web</h1>
+          <p class="hint" id="login-hint">使用网兜账号（邮箱 + 密码）登录。登录状态将保持在本机，无需每次刷新重新登录。</p>
+          <label>邮箱<input id="login-email" type="email" placeholder="you@example.com" autocomplete="username" /></label>
+          <label>密码<input id="login-password" type="password" placeholder="登录密码" autocomplete="current-password" /></label>
+          <div id="register-fields" hidden>
+            <label>邮箱验证码<span class="code-row">
+              <input id="register-code" type="text" inputmode="numeric" maxlength="6" placeholder="6 位验证码" />
+              <button id="btn-send-code" type="button" class="btn btn-sm">获取验证码</button>
+            </span></label>
+            <div id="turnstile-row" class="turnstile-row"></div>
+          </div>
+          <div id="captcha-row" class="captcha-row">
+            <label>图形验证码<input id="login-captcha" type="text" inputmode="numeric" maxlength="4" placeholder="输入图中数字" autocomplete="off" /></label>
+            <div id="captcha-img" class="captcha-img" title="点击刷新"></div>
+          </div>
+          <p id="login-msg" class="msg"></p>
+          <button id="btn-login" class="btn btn-primary btn-block">登录</button>
+          <button id="switch-mode" type="button" class="btn btn-ghost btn-block linklike">没有账号？注册</button>
+          <p class="hint tight">
+            还没有云端数据？先在
+            <a href="/" target="_blank" rel="noopener">网兜客户端</a>
+            注册登录并开启「云端备份网盘账号」。
+          </p>
         </div>
-        <div id="captcha-row" class="captcha-row">
-          <label>图形验证码<input id="login-captcha" type="text" inputmode="numeric" maxlength="4" placeholder="输入图中数字" autocomplete="off" /></label>
-          <div id="captcha-img" class="captcha-img" title="点击刷新"></div>
+        <div id="login-closed" hidden>
+          <h1>登录暂未开放</h1>
+          <p class="hint">网兜 Web 登录入口暂未对外开放。你仍可使用桌面客户端管理网盘：</p>
+          <a class="btn btn-primary btn-block" href="/">返回官网</a>
         </div>
-        <p id="login-msg" class="msg"></p>
-        <button id="btn-login" class="btn btn-primary btn-block">登录</button>
-        <button id="switch-mode" type="button" class="btn btn-ghost btn-block linklike">没有账号？注册</button>
-        <p class="hint tight">
-          还没有云端数据？先在
-          <a href="/" target="_blank" rel="noopener">网兜客户端</a>
-          注册登录并开启「云端备份网盘账号」。
-        </p>
       </div>
     </main>
 
