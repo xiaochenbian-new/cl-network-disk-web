@@ -31,7 +31,7 @@
       href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Syne:wght@600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20261108c" />
+    <link rel="stylesheet" href="styles.css?v=20261108d" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -57,6 +57,28 @@
       <span class="grid-mesh"></span>
     </div>
 
+    <!-- 站点公告条：核销后台「公告」开启才显示（默认隐藏，避免闪一下） -->
+    <div id="site-announcement" class="ann-bar" hidden style="display: none">
+      <div class="ann-bar-inner">
+        <span class="ann-bar-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 9v6h3l8 4V5L7 9H4z" />
+            <path d="M18 8.5a4.5 4.5 0 0 1 0 7" />
+          </svg>
+        </span>
+        <span class="ann-bar-tag">公告</span>
+        <p class="ann-bar-text">
+          <strong id="site-announcement-title"></strong>
+          <span id="site-announcement-body"></span>
+        </p>
+        <button type="button" id="site-announcement-close" class="ann-bar-close" aria-label="关闭公告">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
     <header class="site-header">
       <a class="brand" href="#top" aria-label="网兜首页">
         <img src="assets/app-icon.png" alt="网兜" width="36" height="36" />
@@ -72,18 +94,6 @@
         <a href="app.html" id="nav-login" hidden style="display: none">登录</a>
       </nav>
     </header>
-
-    <!-- 站点公告：核销后台「公告」配置开启才显示（hidden + 内联 display 双保险） -->
-    <div id="site-announcement" class="site-announcement" hidden style="display: none">
-      <div class="site-announcement-inner">
-        <span class="site-announcement-badge">公告</span>
-        <div class="site-announcement-content">
-          <strong id="site-announcement-title"></strong>
-          <p id="site-announcement-body"></p>
-        </div>
-        <button type="button" id="site-announcement-close" class="site-announcement-close" aria-label="关闭公告">&times;</button>
-      </div>
-    </div>
 
     <main id="top">
       <section class="hero">
@@ -240,6 +250,6 @@
     </footer>
 
     <script src="config.js"></script>
-    <script src="main.js?v=20261108c"></script>
+    <script src="main.js?v=20261108d"></script>
   </body>
 </html>

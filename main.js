@@ -181,8 +181,13 @@
     }
     var titleEl = document.getElementById("site-announcement-title");
     var bodyEl = document.getElementById("site-announcement-body");
-    if (titleEl) titleEl.textContent = String(ann.title || "公告");
-    if (bodyEl) bodyEl.textContent = String(ann.body || "");
+    var title = String(ann.title || "").trim();
+    var body = String(ann.body || "").trim();
+    if (titleEl) titleEl.textContent = title;
+    if (bodyEl) {
+      bodyEl.textContent = body;
+      bodyEl.title = body;
+    }
     box.hidden = false;
     box.style.display = "";
     var close = document.getElementById("site-announcement-close");
