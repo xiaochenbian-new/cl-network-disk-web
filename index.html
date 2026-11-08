@@ -69,7 +69,7 @@
         <a href="#contact" hidden>联系</a>
         <a href="#download" class="nav-cta">下载</a>
         <!-- 登录入口默认隐藏，由核销后台「功能开关」开启后才展示 -->
-        <a href="app.html" id="nav-login" hidden>登录</a>
+        <a href="app.html" id="nav-login" hidden style="display: none">登录</a>
       </nav>
     </header>
 
@@ -85,8 +85,8 @@
           </p>
           <div class="hero-actions">
             <a class="btn btn-primary" id="btn-download" href="#download">下载 Windows 版</a>
-            <!-- Web 版入口同样由核销后台「功能开关」控制，默认隐藏 -->
-            <a class="btn btn-ghost" id="hero-web-btn" href="app.html" hidden>打开 Web 版</a>
+            <!-- Web 版入口同样由核销后台「功能开关」控制，默认隐藏（hidden + 内联 display 双保险） -->
+            <a class="btn btn-ghost" id="hero-web-btn" href="app.html" hidden style="display: none">打开 Web 版</a>
             <a class="btn btn-ghost" href="#features">了解功能</a>
           </div>
         </div>
