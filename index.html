@@ -85,7 +85,8 @@
           </p>
           <div class="hero-actions">
             <a class="btn btn-primary" id="btn-download" href="#download">下载 Windows 版</a>
-            <a class="btn btn-ghost" href="app.html">打开 Web 版</a>
+            <!-- Web 版入口同样由核销后台「功能开关」控制，默认隐藏 -->
+            <a class="btn btn-ghost" id="hero-web-btn" href="app.html" hidden>打开 Web 版</a>
             <a class="btn btn-ghost" href="#features">了解功能</a>
           </div>
         </div>
@@ -227,6 +228,6 @@
     </footer>
 
     <script src="config.js"></script>
-    <script src="main.js"></script>
+    <script src="main.js?v=20261108a"></script>
   </body>
 </html>

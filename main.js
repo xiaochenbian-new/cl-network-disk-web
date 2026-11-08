@@ -139,15 +139,22 @@
     });
   }
 
+  // Web 版入口（顶栏登录 + 首屏「打开 Web 版」）：核销后台「功能开关」开启才展示
+  // HTML 里默认 hidden 避免闪一下；接口异常时按 fail-open 放行，不阻塞用户
+  function applyWebEntry(loginEnabled) {
+    var loginNav = document.getElementById("nav-login");
+    if (loginNav) loginNav.hidden = !loginEnabled;
+    var webBtn = document.getElementById("hero-web-btn");
+    if (webBtn) webBtn.hidden = !loginEnabled;
+  }
+
   function applyShop(data) {
     applyDownloads(collectDownloads(data));
     var about = data && data.about;
     if (about && Array.isArray(about.providers)) renderProviders(about.providers);
     if (data && Array.isArray(data.benefits)) renderBenefits(data.benefits);
     renderContacts(data && data.contacts);
-    // 登录入口：核销后台「功能开关」开启才展示（HTML 里默认 hidden，避免闪一下）
-    var loginNav = document.getElementById("nav-login");
-    if (loginNav) loginNav.hidden = !(data && data.features && data.features.loginEnabled);
+    applyWebEntry(!!(data && data.features && data.features.loginEnabled));
   }
 
   function contactHref(item) {
@@ -231,5 +238,7 @@
     .catch(function () {
       applyDownloads(collectDownloads(cfg));
       renderContacts([]);
+      // 接口不可用时不封锁入口（与 app 页一致的 fail-open）
+      applyWebEntry(true);
     });
 })();
