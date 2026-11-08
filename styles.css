@@ -704,3 +704,68 @@ code {
     content: none;
   }
 }
+
+/* ===== 站点公告横幅（核销后台「公告」开启时展示） ===== */
+.site-announcement {
+  background: #fff8e6;
+  border-bottom: 1px solid rgba(217, 119, 6, 0.25);
+}
+
+.site-announcement-inner {
+  max-width: var(--max);
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.7rem 1.25rem;
+}
+
+.site-announcement-badge {
+  flex: none;
+  margin-top: 0.1rem;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.site-announcement-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.site-announcement-content strong {
+  display: block;
+  color: var(--ink);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.site-announcement-content p {
+  margin: 0.15rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  white-space: pre-line;
+  word-break: break-word;
+}
+
+.site-announcement-close {
+  flex: none;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.3rem;
+  line-height: 1;
+  padding: 0.15rem 0.4rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.site-announcement-close:hover {
+  background: rgba(217, 119, 6, 0.12);
+  color: var(--ink);
+}

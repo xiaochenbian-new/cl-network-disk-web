@@ -156,6 +156,49 @@
     });
   }
 
+  // 站点公告：核销后台「公告」配置开启才展示；关闭过的同一条不再出现
+  function applyAnnouncement(ann) {
+    var box = document.getElementById("site-announcement");
+    if (!box) return;
+    var valid = ann && ann.enabled && (String(ann.title || "") || String(ann.body || ""));
+    if (!valid) {
+      box.hidden = true;
+      box.style.display = "none";
+      return;
+    }
+    var key = "wangdou-ann-dismissed";
+    var dismissed = 0;
+    try {
+      dismissed = Number(localStorage.getItem(key)) || 0;
+    } catch (e) {
+      /* localStorage 不可用时每次都显示 */
+    }
+    var stamp = Number(ann.updatedAt) || 0;
+    if (stamp && dismissed >= stamp) {
+      box.hidden = true;
+      box.style.display = "none";
+      return;
+    }
+    var titleEl = document.getElementById("site-announcement-title");
+    var bodyEl = document.getElementById("site-announcement-body");
+    if (titleEl) titleEl.textContent = String(ann.title || "公告");
+    if (bodyEl) bodyEl.textContent = String(ann.body || "");
+    box.hidden = false;
+    box.style.display = "";
+    var close = document.getElementById("site-announcement-close");
+    if (close) {
+      close.onclick = function () {
+        box.hidden = true;
+        box.style.display = "none";
+        try {
+          localStorage.setItem(key, String(stamp || Date.now()));
+        } catch (e) {
+          /* ignore */
+        }
+      };
+    }
+  }
+
   function applyShop(data) {
     applyDownloads(collectDownloads(data));
     var about = data && data.about;
@@ -163,6 +206,7 @@
     if (data && Array.isArray(data.benefits)) renderBenefits(data.benefits);
     renderContacts(data && data.contacts);
     applyWebEntry(!!(data && data.features && data.features.loginEnabled));
+    applyAnnouncement(data && data.announcement);
   }
 
   function contactHref(item) {

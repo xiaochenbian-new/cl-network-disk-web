@@ -31,7 +31,7 @@
       href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Syne:wght@600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20261108b" />
+    <link rel="stylesheet" href="styles.css?v=20261108c" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -72,6 +72,18 @@
         <a href="app.html" id="nav-login" hidden style="display: none">登录</a>
       </nav>
     </header>
+
+    <!-- 站点公告：核销后台「公告」配置开启才显示（hidden + 内联 display 双保险） -->
+    <div id="site-announcement" class="site-announcement" hidden style="display: none">
+      <div class="site-announcement-inner">
+        <span class="site-announcement-badge">公告</span>
+        <div class="site-announcement-content">
+          <strong id="site-announcement-title"></strong>
+          <p id="site-announcement-body"></p>
+        </div>
+        <button type="button" id="site-announcement-close" class="site-announcement-close" aria-label="关闭公告">&times;</button>
+      </div>
+    </div>
 
     <main id="top">
       <section class="hero">
@@ -228,6 +240,6 @@
     </footer>
 
     <script src="config.js"></script>
-    <script src="main.js?v=20261108b"></script>
+    <script src="main.js?v=20261108c"></script>
   </body>
 </html>
