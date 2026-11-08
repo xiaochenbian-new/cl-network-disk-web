@@ -141,11 +141,19 @@
 
   // Web 版入口（顶栏登录 + 首屏「打开 Web 版」）：核销后台「功能开关」开启才展示
   // HTML 里默认 hidden 避免闪一下；接口异常时按 fail-open 放行，不阻塞用户
+  // 注意：CSS 里 .btn 的 display:inline-flex 会盖掉 [hidden]，所以同时写内联 display
   function applyWebEntry(loginEnabled) {
-    var loginNav = document.getElementById("nav-login");
-    if (loginNav) loginNav.hidden = !loginEnabled;
-    var webBtn = document.getElementById("hero-web-btn");
-    if (webBtn) webBtn.hidden = !loginEnabled;
+    var nodes = document.querySelectorAll(
+      "#nav-login, #hero-web-btn, a[href='app.html'], a[href^='app.html?']"
+    );
+    Array.prototype.forEach.call(nodes, function (el) {
+      el.hidden = !loginEnabled;
+      if (loginEnabled) {
+        el.style.removeProperty("display");
+      } else {
+        el.style.setProperty("display", "none", "important");
+      }
+    });
   }
 
   function applyShop(data) {
